@@ -220,7 +220,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
         <div class="mini-stat"><span>No disponibles</span><b id="sideDemand" class="demand">0</b></div>
         <div class="mini-stat"><span>Estado</span><b><span id="statusDot" class="status-dot"></span><span id="statusText">Sin cargar</span></b></div>
       </div>
-    <div class="app-version">v3.38</div></aside>
+    <div class="app-version">v3.40</div></aside>
 
     <main class="content">
       <section class="page active" id="page-consulta">
@@ -638,7 +638,7 @@ function interpretFreeCase(){
  $('caseSummary').textContent='Sugerencias según el motivo de consulta y las existencias registradas. Verifica las precauciones antes de dispensar.'+(caseParsed.ambiguousAge?' Se mencionan varias edades; consulta un caso a la vez.':'');
  setFlow(caseParsed.topics[0]?.id||'otro');caseHasRun=true;evaluate();
 }
-// PuntoFARMA v3.37 · motor local orientativo de motivos de consulta.
+// PuntoFARMA v3.40 · motor orientativo de motivos de consulta.
 // Cruza necesidades con el catálogo; no identifica automáticamente condición regulatoria,
 // dosis, interacciones, ni sustituye a profesional sanitario.
 const PF_CASES=[
@@ -650,7 +650,7 @@ const PF_CASES=[
  {id:'fiebre',title:'Fiebre',match:/\b(FIEBRE|TEMPERATURA ALTA|CALENTURA)\b/,hint:'La fiebre puede tener diferentes causas. Prestar atención a hidratación y evolución.',alert:'Un bebé menor de tres meses con fiebre, dificultad respiratoria o alteración del estado general requiere valoración urgente.',groups:[{name:'Paracetamol',re:/PARACETAMOL|ACETAMINOFEN|TEMPRA|TYLENOL/,exclude:/ANTIGRIPAL|MULTISINTOM|COMBINAD/,why:'Alivio de fiebre; dosis y presentación dependen de edad y peso.'}]},
  {id:'dismenorrea',title:'Cólicos o dolor menstrual',match:/\b(COLICOS? MENSTRUALES?|DOLOR MENSTRUAL|DOLOR DE REGLA|DOLOR DE PERIODO|DISMENORREA)\b/,hint:'El dolor menstrual habitual puede aliviarse con medidas físicas y analgésicos adecuados.',alert:'Evaluar dolor intenso nuevo, posible embarazo, desmayo o sangrado abundante.',groups:[{name:'Ibuprofeno',re:/IBUPROFEN|ADVIL|MOTRIN/,why:'Antiinflamatorio utilizado en molestias menstruales seleccionadas.'},{name:'Naproxeno',re:/NAPROXEN|ALEVE|FLANAX/,why:'Otra opción antiinflamatoria; revisar contraindicaciones.'},{name:'Paracetamol',re:/PARACETAMOL|ACETAMINOFEN/,why:'Alternativa analgésica para molestias leves.'}]},
  {id:'muscular',title:'Dolor muscular o de espalda',match:/\b(DOLOR MUSCULAR|DOLOR DE ESPALDA|DOLOR LUMBAR|CONTRACTURA|DOLOR DE CUELLO|DOLOR DE HOMBRO|DOLOR DE RODILLA)\b/,hint:'Ante traumatismos, debilidad, hormigueo importante o dolor persistente se requiere valoración.',alert:'Descartar lesión importante, dificultad para moverse, pérdida de fuerza o signos neurológicos.',groups:[{name:'Gel antiinflamatorio',re:/DICLOFENAC.*(GEL|CREMA)|\bGEL\b.*DICLOFENAC|VOLTAREN.*GEL/,why:'Opción tópica para molestias musculares localizadas; confirmar presentación.'},{name:'Paracetamol',re:/PARACETAMOL|ACETAMINOFEN/,exclude:/ANTIGRIPAL|COMBINAD/,why:'Alivio sintomático de dolor leve.'}]},
- {id:'acidez',title:'Acidez o reflujo',match:/\b(ACIDEZ|ARDOR DE ESTOMAGO|REFLUJO|AGRURAS|AGRIERAS)\b/,hint:'Para acidez ocasional pueden utilizarse antiácidos o alginatos apropiados.',alert:'Dolor torácico, dificultad al tragar, pérdida de peso o vómito con sangre requieren evaluación.',groups:[{name:'Antiácidos / alginatos',re:/ALGINATO|GAVISCON|ANTIACID|HIDROXIDO DE MAGNESIO|HIDROXIDO DE ALUMINIO|CARBONATO DE CALCIO|MAALOX|MILANTA|MYLANTA/,why:'Alivio ocasional de acidez; revisar composición y otras medicaciones.'}]},
+ {id:'acidez',title:'Acidez o reflujo',match:/\b(ACIDEZ(?: ESTOMACAL)?|ARDOR (?:DE|EN EL|EN LA) (?:ESTOMAGO|BOCA DEL ESTOMAGO)|ARDOR ESTOMACAL|QUEMAZON (?:EN EL|DEL) ESTOMAGO|REFLUJO(?: GASTROESOFAGICO)?|AGRURAS|AGRIERAS|AGRERAS|VINAGRERA|VINAGRERAS|(?:SE )?ME SUBE EL ACIDO|ME REGRESA EL ACIDO|ME ARDE (?:EL |LA BOCA DEL )?ESTOMAGO)\b/,hint:'Si la acidez es ocasional, revisar antiácidos o alginatos para alivio rápido. Si es frecuente o existe reflujo, el farmacéutico puede valorar un inhibidor de ácido como omeprazol; no produce alivio inmediato.',alert:'Confirmar desde cuándo ocurre y con qué frecuencia. Revisar otros medicamentos y antecedentes; dolor de pecho, dificultad al tragar, pérdida de peso, vómitos con sangre o heces negras requieren valoración médica. No indicar omeprazol de forma prolongada sin evaluación.',groups:[{name:'Antiácidos / alginatos',re:/ALGINATO|GAVISCON|ANTIACID|HIDROXIDO DE MAGNESIO|HIDROXIDO DE ALUMINIO|CARBONATO DE CALCIO|MAALOX|MILANTA|MYLANTA/,why:'Alivio de acidez ocasional; revisar composición, interacciones y presentación.'},{name:'Omeprazol / otros inhibidores de ácido (IBP)',re:/OMEPRAZ|ESOMEPRAZ|PANTOPRAZ|LANSOPRAZ|RABEPRAZ/,exclude:/VETERINAR|INYECT|INTRAVEN|DOMPERIDON|AMOXICIL|CLARITROMIC|TRIPLE TERAPIA|\bKIT\b/,why:'Para acidez frecuente o reflujo en casos seleccionados, previa revisión farmacéutica; no alivia de inmediato ni sustituye el diagnóstico.'}]},
  {id:'gases',title:'Gases y distensión',match:/\b(GASES|FLATULENCIA|HINCHAZON DE BARRIGA|DISTENSION ABDOMINAL)\b/,hint:'La simeticona puede ayudar con molestias por gases.',alert:'Dolor fuerte, vómitos repetidos, abdomen rígido o fiebre requieren evaluación.',groups:[{name:'Simeticona',re:/SIMETICON|AERO.?OM|GAS.?X/,why:'Producto empleado para molestias asociadas a gases.'}]},
  {id:'estrenimiento',title:'Estreñimiento',match:/\b(ESTRENIMIENTO|ESTRE[NÑ]ID\w*|NO PUEDE DEFECAR|DIFICULTAD PARA EVACUAR|CONSTIPACION)\b/,hint:'Priorizar líquidos, fibra y revisión de duración; no todos los laxantes son adecuados para todos.',alert:'Dolor abdominal intenso, vómitos, ausencia de gases o sangre requieren valoración.',groups:[{name:'Fibra / psyllium',re:/PSYLLIUM|PLANTAGO OVATA|FIBRA SOLUBLE|METAMUCIL/,why:'Fibra de volumen: valorar hidratación y contraindicaciones.'},{name:'Lactulosa o macrogol',re:/LACTULOSA|MACROGOL|POLIETILENGLICOL|PEG 3350/,why:'Laxantes osmóticos: revisar condición y población de uso.'}]},
  {id:'tosseca',title:'Tos seca',match:/\b(TOS SECA|TOS SIN FLEMA|TOS IRRITATIVA)\b/,hint:'Revisar edad, duración y medicamentos antes de usar supresores de la tos.',alert:'Dificultad respiratoria, sangre al toser o tos persistente requieren valoración.',groups:[{name:'Alivio de tos seca',re:/DEXTROMETORF|BUTAMIRAT|LEVODROPROP|CLOPERAST|TOS SECA/,why:'Preparado usado para tos seca; validar edad, interacciones y composición.'}]},
@@ -674,28 +674,183 @@ const PF_CASES=[
  {id:'nebulizacion',title:'Accesorios para nebulización',match:/\b(MASCARILLA PARA NEBULIZ|NEBULIZADOR|NEBULIZACION|NEBULIZAR)\b/,hint:'Seleccionar mascarilla pediátrica o adulta según paciente; los medicamentos para nebulizar requieren indicación específica.',alert:'Dificultad para respirar o crisis de asma: atención urgente.',groups:[{name:'Mascarilla nebulización pediátrica',re:/MASCARILLA.*NEBULIZ.*PEDIATR|MASCARILLA.*NEBULIZ.*NIN/,why:'Accesorio pediátrico: verificar compatibilidad.'},{name:'Mascarilla nebulización adulto',re:/MASCARILLA.*NEBULIZ.*ADULT/,why:'Accesorio adulto: verificar compatibilidad.'}]},
  {id:'antibiotico',title:'Consulta por antibiótico',match:/\b(ANTIBIOTICO|AMOXICILINA|AZITROMICINA|CIPROFLOXACINO|INFECCION URINARIA)\b/,hint:'No seleccionar ni iniciar antibióticos automáticamente: se necesita evaluar el diagnóstico y la prescripción cuando corresponda.',alert:'Fiebre persistente, dolor lumbar, embarazo o deterioro: valoración oportuna.',groups:[]}
 ];
-function pfDetectCase(raw){const n=norm(raw);return PF_CASES.find(x=>x.match.test(n))||null}
-function pfMatchesForGroup(group){
- const excludeExtra=/\b(VETERINARIA|VETERINARIO)\b/;
- return catalog.filter(p=>{
-  const text=norm([p.name,p.active,p.presentation].join(' '));
-  return group.re.test(text)&&!group.exclude?.test(text)&&!excludeExtra.test(text);
- }).sort((a,b)=>(b.stock>0?1:0)-(a.stock>0?1:0) || b.stock-a.stock);
+// PuntoFARMA v3.40: motor transversal de casos, solo para "Consultar un caso".
+// Unifica sinónimos, consultas con varios síntomas y relaciones verificables
+// entre indicaciones y productos; no envía información del paciente a servicios externos.
+const PF_CASE_VOCAB={
+ acidez:['gastritis con ardor','ardor despues de comer','ardor despues de las comidas','ardor en la boca del estomago','sensacion de quemazon','agria','me arde el estomago','siento acido','tengo ardor gastrico','pirosis','hiperacidez'],
+ diarrea:['voy al bano a cada rato','hago del cuerpo liquido','evacuaciones frecuentes liquidas','deposiciones acuosas','estomago flojo','diarreica'],
+ estrenimiento:['no puedo hacer del cuerpo','no puedo ir al bano','no ha hecho popo','heces duras','me cuesta defecar','dificultad para hacer del cuerpo','constipada'],
+ gases:['barriga inflada','estomago hinchado','vientre hinchado','panza hinchada','estoy hinchado del estomago','muchos gases','eructos frecuentes','flatulencias'],
+ cefalea:['me duele la cabeza','cabeza me duele','dolor de la frente','dolor en las sienes','jaquecas','me late la cabeza'],
+ dental:['dolor de muela','dolor de muelas','me duele una muela','me duele un diente','dolor dental','dolor de dientes'],
+ dismenorrea:['me duele la regla','dolor de menstruacion','colicos de periodo','dolor cuando menstruo'],
+ muscular:['dolor en la espalda','espalda adolorida','me duele la espalda','dolor por esfuerzo','dolor en los musculos','me duele el cuerpo','dolor de cintura'],
+ fiebre:['tiene temperatura','esta afiebrado','esta con calentura','temperatura de 38','temperatura de 39'],
+ tosseca:['tiene tos seca','tose sin flemas','tos sin expectoracion','tos irritante','tos que no bota flema'],
+ tosflema:['tose con mocos','tiene mucha flema','tos humeda','tos con secreciones','tos que bota flema','tos con moco'],
+ congestion:['no puede respirar por la nariz','se le tapa la nariz','nariz obstruida','congestionado de la nariz','secrecion nasal'],
+ alergia:['estornuda mucho','alergia al polvo','nariz le pica','secrecion de nariz alergica','rinitis alergica'],
+ resfriado:['esta agripado','esta resfriado','catarro comun','infeccion respiratoria alta viral'],
+ garganta:['le duele la garganta','me raspa la garganta','me arde la garganta','dolor al tragar','irritacion faríngea'],
+ nausea:['ganas de vomitar','siente nauseas','mareo al viajar','se marea en bus','mareo al viajar en carro'],
+ vomitos:['esta vomitando','ha vomitado','devolviendo la comida','vomita despues de comer'],
+ pielhongo:['pie con hongo','hongos en los dedos del pie','descamacion entre dedos del pie','pie de atleta'],
+ picazon:['le pica todo el cuerpo','tengo ronchas','le pica la piel','sarpullido en la piel','picor generalizado'],
+ irritacionocular:['se me arde el ojo','me arde el ojo','arden mis ojos','se me irritan los ojos','ojo rojo con ardor'],
+ ojoseco:['ojos resecados','arenilla en los ojos','ojos resecos','ojo reseco','sensacion de arena en los ojos'],
+ acne:['granos en la cara','barritos','espinillas en el rostro'],
+ panal:['rozaduras del panal','bebe con colita irritada','dermatitis por panal','irritacion por el panal'],
+ heridas:['se corto','tiene una raspadura','corte pequeno','herida superficial','se raspo la piel'],
+ quemadura:['se quemo con sol','quemadura superficial pequena','quemadura por sol'],
+ repelente:['evitar picaduras de zancudos','proteger de mosquitos','producto contra zancudos'],
+ piojos:['mi hijo tiene liendres','se le pegaron piojos'],
+ nebulizacion:['mascara para nebulizar','mascarilla nebulizacion','hacer nebulizaciones'],
+ insomnio:['me cuesta dormir','me desvelo','dificultad para conciliar el sueno','no logro dormir'],
+ antibiotico:['me pide un antibiotico','quiere antibioticos','me dieron una receta de antibiotico','ardor al orinar con infeccion'],
+ emergencia:['pastilla del dia siguiente','se rompió el preservativo','sexo sin proteccion','anticonceptivo de emergencia'],
+ anticonceptivo:['pastillas para cuidarse','metodo para no quedar embarazada','planificacion familiar'],
+ testembarazo:['quiero saber si estoy embarazada','tengo atraso de regla','test embarazo'],
+ vitaminas:['quiero vitaminas','necesito suplementos','quiero subir defensas']
+};
+const PF_EXTRA_CASES=[
+ {id:'dental',title:'Dolor dental o de muela',match:/\b(DOLOR DE MUELAS?|DOLOR DENTAL|ME DUELE (?:UNA? )?MUELA|DOLOR DE DIENTES?)\b/,hint:'El alivio del dolor es temporal; un dolor dental necesita valoración odontológica para tratar su causa.',alert:'Hinchazón de cara, fiebre, dificultad para tragar o abrir la boca: atención odontológica urgente. No indicar antibióticos automáticamente.',groups:[{name:'Paracetamol',re:/PARACETAMOL|ACETAMINOFEN/,exclude:/ANTIGRIPAL|COMBINAD|CODEINA|TRAMADOL/,why:'Analgésico para dolor leve, sujeto a antecedentes y dosis apropiada.'},{name:'Ibuprofeno',re:/IBUPROFENO|IBUPROFEN/,exclude:/ANTIGRIPAL|COMBINAD/,why:'Opción antiinflamatoria para adultos seleccionados; revisar úlcera, riñón, embarazo y anticoagulantes.'}]},
+ {id:'irritacionocular',title:'Molestia o irritación ocular',match:/\b(IRRITACION OCULAR|OJOS IRRITADOS|ME ARDEN LOS OJOS|OJO IRRITADO)\b/,hint:'La irritación puede deberse a sequedad, alergia, infección o lesión; primero hay que precisar la causa.',alert:'Dolor ocular, fotofobia, cambios de visión, secreción espesa o uso de lentes de contacto con dolor: valoración pronta.',groups:[{name:'Lubricante ocular',re:/LAGRIMAS ARTIFICIALES|LUBRICANTE OCULAR|CARBOXIMETILCELULOSA|HIALURONATO DE SODIO.*OFTALM|HIPROMELOSA|SYSTANE/,exclude:/ANTIBIOTICO|CORTICOIDE|DEXAMETASONA|PREDNISOLONA/,why:'Solo para molestias leves compatibles con sequedad; no sustituye una valoración ocular.'}]},
+ {id:'cuidadooral',title:'Higiene bucal',match:/\b(HIGIENE BUCAL|LIMPIEZA DENTAL|PASTA DENTAL|CEPILLO DENTAL|CUIDADO DE DIENTES)\b/,hint:'Los artículos de higiene son una ayuda preventiva y no sustituyen la atención odontológica.',alert:'Dolor persistente, sangrado importante o lesiones bucales requieren evaluación.',groups:[{name:'Cepillo dental',re:/CEPILLO DENTAL|CEPILLO.*DIENTES|COLGATE.*CEPILLO/,why:'Seleccionar dureza y tamaño adecuados.'},{name:'Pasta dental',re:/PASTA DENTAL|CREMA DENTAL|DENTIFRICO|COLGATE.*CLEAN/,why:'Higiene bucal diaria; confirmar indicaciones por edad.'}]},
+ {id:'urinario',title:'Molestias al orinar',match:/\b(ARDOR AL ORINAR|DOLOR AL ORINAR|ORINA CON ARDOR|INFECCION DE ORINA|CISTITIS)\b/,hint:'El ardor al orinar no confirma una infección bacteriana y requiere valoración clínica.',alert:'Embarazo, fiebre, dolor lumbar, sangre visible o vómitos: valoración médica pronta. No elegir antibióticos por síntomas.',groups:[]},
+ {id:'insomnio',title:'Dificultad para dormir',match:/\b(INSOMNIO|NO PUEDO DORMIR|PROBLEMAS PARA DORMIR|DESPERTARES NOCTURNOS)\b/,hint:'La causa y duración son importantes. Priorizar hábitos de sueño y revisión de medicamentos o sustancias.',alert:'Si hay deterioro importante, ideas de autolesión o trastornos respiratorios del sueño, buscar atención profesional.',groups:[]},
+ {id:'hemorroides',title:'Molestias anales o hemorroides',match:/\b(HEMORROIDES|MOLESTIAS ANALES|PICAZON ANAL|DOLOR AL DEFECAR)\b/,hint:'El diagnóstico de hemorroides no debe asumirse solo por picazón o dolor.',alert:'Sangrado rectal, dolor importante o cambios recientes del hábito intestinal requieren valoración.',groups:[]}
+];
+const PF_CASE_LIBRARY=[...PF_CASES,...PF_EXTRA_CASES];
+function pfIsNegatedMention(normalized,at){
+ const before=normalized.slice(Math.max(0,at-43),at);
+ return /(?:\bSIN|\bNIEGA|\bNO (?:TENGO|TIENE|PRESENTA|HAY|SIENTE|HA TENIDO|REFIERE)|\bDESCARTA)\s+(?:(?:DE|NI|Y|UN|UNA|MAS|ACTUALMENTE)\s+){0,3}$/.test(before);
 }
-function pfCaseCandidates(rule){
+// Vía de respaldo alimentada por TODAS las indicaciones conocidas del catálogo.
+// Coincidencia textual exacta de indicación, NO inferencia diagnóstica por palabras sueltas.
+function pfCatalogFallback(raw){
+ const query=norm(raw),groups=new Map();
+ const excluded=/^(?:DOLOR LEVE|FIEBRE|DOLOR|MALESTAR|USO SEGUN COMPOSICION|INFECCIONES BACTERIANAS ESPECIFICAS|SINTOMAS GRIPALES)$/;
+ for(const p of catalog){
+  const k=knowledgeFor(p);
+  if(!['web','local'].includes(k.status))continue;
+  for(const indication of (k.cases||[])){
+   const c=norm(indication);
+   if(c.length<10||excluded.test(c))continue;
+   const pos=query.indexOf(c);
+   if(pos<0||pfIsNegatedMention(query,pos))continue;
+   if((pos>0&&/\w/.test(query[pos-1]))||(pos+c.length<query.length&&/\w/.test(query[pos+c.length])))continue;
+   if(!groups.has(c))groups.set(c,[]);
+   groups.get(c).push(p);
+  }
+ }
+ if(!groups.size)return null;
+ const [indication,products]=[...groups.entries()].sort((a,b)=>b[0].length-a[0].length)[0];
+ const identifiers=new Set(products.map(p=>p._i));
+ return {id:'catalog_indicacion',dynamic:true,title:'Consulta por '+indication.toLowerCase(),
+  hint:'Coincidencia encontrada en indicaciones conocidas del catálogo, no diagnóstico ni autorización para usar el medicamento. Requiere confirmación de un profesional.',
+  alert:'Confirmar diagnóstico, antecedentes, receta cuando corresponda y prospecto de la presentación antes de dispensar.',
+  groups:[{name:'Producto relacionado según ficha conocida',selectIndexes:identifiers,why:'Indicación textual registrada en la ficha local; confirmar si corresponde al caso específico.'}]};
+}
+function pfDetectCases(raw){
+ const n=norm(raw),found=[];
+ PF_CASE_LIBRARY.forEach((rule,idx)=>{
+  const hit=rule.match.exec(n);
+  let score=0;
+  if(hit&&!pfIsNegatedMention(n,hit.index))score=100+Math.min(24,hit[0].length);
+  for(const phrase of (PF_CASE_VOCAB[rule.id]||[])){
+   const ph=norm(phrase),pos=n.indexOf(ph);
+   if(pos>=0&&!pfIsNegatedMention(n,pos))score=Math.max(score,112+Math.min(35,ph.length));
+  }
+  if(score)found.push({rule,score,idx});
+ });
+ const priority={emergencia:20,antibiotico:12,urinario:12,insomnio:8,pielhongo:8,irritacionocular:5};
+ return found.length?found.sort((a,b)=>(b.score+(priority[b.rule.id]||0))-(a.score+(priority[a.rule.id]||0))||a.idx-b.idx).slice(0,3).map(x=>x.rule):[pfCatalogFallback(raw)].filter(Boolean);
+}
+function pfDetectCase(raw){return pfDetectCases(raw)[0]||null}
+// La evidencia proviene de indicaciones conocidas; nunca se usa una coincidencia
+// léxica genérica en la descripción como justificación clínica.
+const PF_KNOWN_CLASS={
+ ojoseco:/LUBRICANTE OCULAR|GOTAS LUBRICANTES|OJO SECO|RESEQUEDAD OCULAR/,
+ irritacionocular:/LUBRICANTE OCULAR|GOTAS LUBRICANTES|OJO SECO|RESEQUEDAD OCULAR/,
+ acidez:/ACIDEZ|REFLUJO|INHIBIDOR DE LA BOMBA DE PROTONES|ANTAGONISTA H2/,
+ gases:/GASES|DISTENSION ABDOMINAL|ANTIFLATULENTO/,
+ estrenimiento:/ESTRENIMIENTO|LAXANTE OSMOTICO/,
+ tosseca:/TOS SECA|TOS IRRITATIVA|ANTITUSIVO/,
+ tosflema:/TOS CON FLEMA|SECRECIONES ESPESAS|EXPECTORANTE|MUCOLITICO/,
+ fiebre:/FIEBRE|ANTIPIRETICO/,
+ cefalea:/ANALGESICO|DOLOR LEVE/,
+ dental:/ANALGESICO|DOLOR DENTAL/,
+ muscular:/ANALGESICO|DOLOR MUSCULAR|DOLOR MUSCULOESQUELETICO/,
+ alergia:/ANTIHISTAMINICO|RINITIS ALERGICA/,
+ picazon:/ANTIHISTAMINICO|URTICARIA/,
+ nausea:/MAREO POR MOVIMIENTO/,
+ piojos:/PEDICULOSIS|ANTIPIOJOS/
+};
+function pfKnowledgeForGroup(group,rule,p){
+ if(!rule||!PF_KNOWN_CLASS[rule.id])return false;
+ const k=knowledgeFor(p);if(k.status==='pending'||k.status==='generic')return false;
+ const evidence=norm([k.char,...(k.cases||[])].join(' '));
+ if(!PF_KNOWN_CLASS[rule.id].test(evidence))return false;
+ // Las reglas de producto específico tienen preferencia; evitar colocar el
+ // medicamento en una categoría clínica equivocada si hay varios grupos.
+ const name=norm(group.name);
+ if(/LUBRICANTE OCULAR/.test(name))return /LUBRICANTE OCULAR|OJO SECO/.test(evidence);
+ if(/EXPECTORANTE|MUCOLITICO/.test(name))return /EXPECTORANTE|MUCOLITICO|TOS CON FLEMA/.test(evidence);
+ if(/TOS SECA/.test(name))return /ANTITUSIVO|TOS SECA/.test(evidence);
+ if(/SIMETICON/.test(name))return /ANTIFLATULENTO/.test(evidence);
+ if(/IBP|OMEPRAZOL/.test(name))return /INHIBIDOR DE LA BOMBA DE PROTONES/.test(evidence);
+ if(/ANTIHISTAMINICO/.test(name))return /ANTIHISTAMINICO/.test(evidence);
+ if(/PARACETAMOL/.test(name))return /PARACETAMOL/.test(norm([p.name,p.active,k.active].join(' ')));
+ if(/IBUPROFENO/.test(name))return /IBUPROFENO|IBUPROFEN/.test(norm([p.name,p.active,k.active].join(' ')));
+ if(/ALIVIO DE TOS SECA/.test(name))return /ANTITUSIVO/.test(evidence);
+ // En un grupo único puede utilizarse un indicio de clase conocido y específico.
+ return rule.groups.length===1&&/LUBRICANTE OCULAR|ANTIFLATULENTO|ANTITUSIVO|MUCOLITICO|EXPECTORANTE/.test(evidence);
+}
+function pfMatchesForGroup(group,rule){
+ const vet=/\b(VETERINARIA|VETERINARIO)\b/;
+ return catalog.filter(p=>{
+  const product=norm([p.name,p.active,p.presentation].join(' '));
+  const cls=group.selectIndexes?group.selectIndexes.has(p._i):(group.re.test(product)||pfKnowledgeForGroup(group,rule,p));
+  return cls&&!group.exclude?.test(product)&&!vet.test(product);
+ }).sort((a,b)=>Number(b.stock>0)-Number(a.stock>0)||Number(safetyFor(a).type==='rx')-Number(safetyFor(b).type==='rx')||b.stock-a.stock);
+}
+function pfEligibleForCase(p,patient,age){
+ if(!(age!==null&&Number.isFinite(age)&&age<18)&&patient!=='nino')return true;
+ // Para niños no sugerir como apropiada una presentación cuya edad sea desconocida.
+ if(age===null||!Number.isFinite(age))return false;
+ const av=ageEligibility(p,age);
+ if(av.status==='blocked')return false;
+ // Si ficha de edad no existe, mostrar solo en búsqueda de productos, no como recomendación pediátrica.
+ const known=verifiedAge(p);
+ if(!known&&av.status!=='ok')return false;
+ const m=String(known?.label||'').match(/(?:DESDE|MAYORES? DE|A PARTIR DE)\s*(?:LOS\s*)?(\d{1,2})\s*ANOS?/i);
+ if(m&&age<Number(m[1]))return false;
+ return Boolean(known)||av.status==='ok';
+}
+function pfCaseCandidates(rule,patient='',age=null){
  const found=[],seen=new Set();
  (rule.groups||[]).forEach((group,rank)=>{
-  pfMatchesForGroup(group).slice(0,8).forEach((p,i)=>{
+  const matches=pfMatchesForGroup(group,rule);
+  matches.forEach((p,i)=>{
+   if(!pfEligibleForCase(p,patient,age))return;
    const k=[p.code,p.name,p.presentation].join('|');
-   if(seen.has(k))return;
-   seen.add(k);found.push({p,group,rank,ix:i});
+   if(seen.has(k))return;seen.add(k);found.push({p,group,rank,ix:i});
   });
  });
- return found.sort((a,b)=>(b.p.stock>0?1:0)-(a.p.stock>0?1:0) || a.rank-b.rank || b.p.stock-a.p.stock).slice(0,6);
+ // Resultados equilibrados: no dejar que diez productos de una categoría oculten
+ // otra categoría terapéutica relevante. Aplica a TODOS los motivos.
+ const stocked=found.filter(x=>x.p.stock>0),missing=found.filter(x=>x.p.stock<=0);
+ const orderedRanks=rule.id==='diarrea'?[1,0]:[...new Set(found.map(x=>x.rank))];
+ const chosen=[];const ids=new Set();
+ for(const rank of orderedRanks){for(const x of stocked.filter(x=>x.rank===rank).slice(0,2)){
+  if(!ids.has(x.p._i)){chosen.push(x);ids.add(x.p._i)}
+ }}
+ return [...chosen,...stocked.filter(x=>!ids.has(x.p._i)),...missing].slice(0,9);
 }
 function pfProductHTML(item,index,restricted){
  const {p,group}=item,inStock=p.stock>0;
- const label=inStock?(index===0?'Primera opción encontrada':'Alternativa disponible'):'Sin existencias';
+ const label=!inStock?'Sin existencias':safetyFor(p).type==='rx'?'Requiere receta · revisión profesional':index===0?'Opción relacionada · revisar':'Otra opción del inventario';
  return `<div class="pf-reco-item ${index===0&&inStock?'pf-featured':''}">
  <div class="pf-reco-header"><span class="pf-reco-tag ${inStock?'':'pf-out'}">${esc(label)}</span><span class="pf-reco-qty">${inStock?'Disponibles: '+esc(String(p.stock)):'Disponibles: 0'}</span></div>
  <div class="pf-reco-name">${esc(p.name)}</div>
@@ -718,26 +873,31 @@ function evaluate(){
  if(!caseHasRun)return;
  const raw=($('caseText').value||$('symptoms').value||'').trim();
  const detailed=[$('otherMeds').value,$('conditions').value].filter(Boolean).join('. ');
- const parsed=parseCase(raw+'. '+detailed),rule=pfDetectCase(raw);
- const alarms=pfMainSafety(raw,parsed,rule);
+ const parsed=parseCase(raw+'. '+detailed),rules=pfDetectCases(raw);
+ const alarms=pfMainSafety(raw,parsed,rules[0]||null);
  if(alarms.length){$('decision').innerHTML=`<div class="pf-reco-title"><span class="level red">Atención prioritaria</span><h3>No recomendar productos automáticamente</h3></div><div class="case-alert">${alarms.map(x=>'<p>• '+esc(x)+'</p>').join('')}<b>Derivar para valoración inmediata cuando corresponda.</b></div>`;return;}
- if(!rule){$('decision').innerHTML=`<div class="pf-reco-title"><span class="level yellow">Revisar consulta</span><h3>Cuéntame un poco más</h3></div><p>El motivo todavía no coincide con una indicación verificada de nuestra base. Prueba describir la molestia con otras palabras o especificar el producto solicitado.</p>${lookupExactQuickHTML()}<p class="footnote">No se seleccionan medicamentos por similitud de nombre sin conocer su uso.</p>`;return;}
+ if(!rules.length){$('decision').innerHTML=`<div class="pf-reco-title"><span class="level yellow">Revisar consulta</span><h3>Necesito precisar la molestia</h3></div><p>No encontré una indicación suficiente para asociar productos con seguridad. Describe la zona, el síntoma principal y desde cuándo ocurre, o solicita valoración farmacéutica.</p>${lookupExactQuickHTML()}<p class="footnote">No recomendamos medicamentos por coincidencias vagas de palabras ni por similitud entre marcas.</p>`;return;}
  const age=$('patientAge').value===''?parsed.age:Number($('patientAge').value);
- const special=parsed.ambiguousAge||age!==null&&(age<18||age>=65)||$('patient').value==='nino'||$('patient').value==='adultomayor'||$('patient').value==='embarazo'||/\b(ESTOY EMBARAZADA|ESTA EMBARAZADA|EN LACTANCIA|AMAMANTANDO)\b/.test(norm(raw));
- const professional=rule.id==='anticonceptivo'||rule.id==='antibiotico'||rule.id==='emergencia';
- const rows=pfCaseCandidates(rule),available=rows.filter(x=>x.p.stock>0),missing=rows.filter(x=>x.p.stock<=0);
- const restricted=special||professional;
- let items=available.slice(0,4),outOfStock=missing.slice(0,2);
- let html=`<div class="pf-reco-title"><span class="level ${restricted?'yellow':'green'}">${restricted?'Revisión necesaria':'Opciones del inventario'}</span><h3>${esc(rule.title)}</h3></div>
- <p class="pf-reco-lead">${esc(rule.hint)}</p>`;
- if(items.length){html+=`<div class="pf-reco-section">${items.map((item,i)=>pfProductHTML(item,i,restricted)).join('')}</div>`;}
- else if(rule.groups.length){html+=`<p class="pf-reco-empty">No hay existencias registradas entre las opciones asociadas a esta consulta. Revisa también la cantidad física antes de ofrecer otro producto.</p>`;}
- else {html+=`<p class="pf-reco-empty">Este caso necesita valoración farmacéutica o médica antes de seleccionar un tratamiento.</p>`;}
- if(outOfStock.length){html+=`<details class="pf-other-products"><summary>Ver ${outOfStock.length} opción(es) agotada(s)</summary><div class="pf-reco-section">${outOfStock.map((item,i)=>pfProductHTML(item,i+items.length,true)).join('')}</div></details>`;}
- html+=`<div class="pf-safety"><b>Antes de entregar:</b> ${esc(rule.alert)} ${special?'<b>Paciente especial:</b> confirmar edad, peso cuando corresponda y situación clínica con el farmacéutico.':''}</div>`;
- html+=`<p class="pf-smallnote">Stock según último archivo sincronizado, no venta en tiempo real. Verificar la ficha exacta y condición de dispensación en Ecuador. No es receta.</p>`;
+ const patient=$('patient').value||parsed.patient;
+ const special=parsed.ambiguousAge||age!==null&&(age<18||age>=65)||patient==='nino'||patient==='adultomayor'||patient==='embarazo'||/\b(ESTOY EMBARAZADA|ESTA EMBARAZADA|EN LACTANCIA|AMAMANTANDO)\b/.test(norm(raw));
+ const expertOnly=rules.some(r=>r.dynamic||['anticonceptivo','antibiotico','emergencia','urinario','insomnio','hemorroides'].includes(r.id));
+ const restricted=special||expertOnly||Boolean(($('otherMeds').value||'').trim())||Boolean(($('allergies').value||'').trim())||Boolean(($('conditions').value||'').trim());
+ const seen=new Set();let shown=0;let html='';const warnings=[];
+ for(const rule of rules){
+  const rows=pfCaseCandidates(rule,patient,age),available=rows.filter(x=>x.p.stock>0&&!seen.has(x.p._i)),missing=rows.filter(x=>x.p.stock<=0&&!seen.has(x.p._i));
+  const items=available.slice(0,Math.min(rules.length===1?6:Math.max(1,Math.floor(6/rules.length)),6-shown)),outOfStock=missing.slice(0,2);
+  items.forEach(x=>seen.add(x.p._i));shown+=items.length;
+  html+=`<div class="pf-reco-title"><span class="level ${restricted?'yellow':'green'}">${restricted?'Revisión necesaria':'Opciones del inventario'}</span><h3>${esc(rule.title)}</h3></div><p class="pf-reco-lead">${esc(rule.hint)}</p>`;
+  if(items.length)html+=`<div class="pf-reco-section">${items.map((item,i)=>pfProductHTML(item,i,restricted||safetyFor(item.p).type==='rx')).join('')}</div>`;
+  else html+=`<p class="pf-reco-empty">${rows.some(x=>seen.has(x.p._i))?'Las opciones compatibles ya aparecen en el apartado anterior.':rule.groups.length?'No hay presentaciones disponibles con evidencia suficiente para esta consulta y este paciente.':'Este caso requiere valoración antes de seleccionar medicamentos.'}</p>`;
+  if(outOfStock.length)html+=`<details class="pf-other-products"><summary>Ver ${outOfStock.length} opción(es) agotada(s)</summary><div class="pf-reco-section">${outOfStock.map((item,i)=>pfProductHTML(item,i+items.length,true)).join('')}</div></details>`;
+  warnings.push(rule.alert);
+ }
+ html+=`<div class="pf-safety"><b>Antes de entregar:</b> ${esc([...new Set(warnings)].join(' '))} ${special?'<b>Paciente especial:</b> confirmar edad, peso y situación clínica con el farmacéutico.':''} ${restricted&&!special?'<b>Revisión profesional:</b> confirmar antecedentes, otros tratamientos y dispensación.':''}</div>`;
+ html+=`<p class="pf-smallnote">Solo relaciona indicaciones conocidas con productos de tu inventario. Stock según último archivo sincronizado, no venta en tiempo real. Verificar prospecto, contraindicaciones y condición de dispensación en Ecuador. No es receta ni diagnóstico.</p>`;
  $('decision').innerHTML=html;
- hydrateProductAges([...items,...outOfStock].map(x=>x.p),'');
+ const display=rules.flatMap(rule=>pfCaseCandidates(rule,patient,age)).map(x=>x.p).slice(0,12);
+ hydrateProductAges(display,'');
 }
 function lookupExactQuickHTML(){return `<div class="case-section"><h4>Consultar producto indicado</h4><label for="caseProduct">Nombre o código exacto</label><input id="caseProduct" placeholder="Ej.: producto indicado por el farmacéutico"><button class="btn btn-line" style="margin-top:8px" onclick="lookupCaseProduct()">Buscar en inventario</button><div id="caseProductResults"></div></div>`}
 function lookupCaseProduct(){const q=norm($('caseProduct').value);const box=$('caseProductResults');if(q.length<3){box.textContent='Escribe al menos 3 caracteres.';return}const rows=catalog.filter(p=>norm(p.code)===q||norm(p.name).includes(q)||norm(p.active)===q).slice(0,6);box.innerHTML=rows.length?rows.map(p=>`<div class="source-card"><b>${esc(p.name)}</b><p>Presentación: ${esc(p.presentation||'Dato no disponible')}<br>Disponibles: ${p.stock} · Precio del archivo: ${money(p.price)}<br>Unidad de venta y disponibilidad física: confirmar.</p><span class="chip warn">Ficha farmacéutica y dispensación: requiere validación</span></div>`).join(''):'No se encontraron coincidencias por nombre o código en el catálogo cargado.'}
