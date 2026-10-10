@@ -220,7 +220,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
         <div class="mini-stat"><span>No disponibles</span><b id="sideDemand" class="demand">0</b></div>
         <div class="mini-stat"><span>Estado</span><b><span id="statusDot" class="status-dot"></span><span id="statusText">Sin cargar</span></b></div>
       </div>
-    <div class="app-version">v3.37</div></aside>
+    <div class="app-version">v3.38</div></aside>
 
     <main class="content">
       <section class="page active" id="page-consulta">
@@ -278,7 +278,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
 <p id="cloudStatus" role="status">Verificando conexión con Firebase…</p>
 <div class="firebase-actions"><button class="btn btn-green" id="cloudConnect">Reintentar conexión</button><button class="btn btn-line" id="cloudLoad" disabled>Traer inventario de Firebase</button><button class="btn btn-green" id="cloudSave" disabled>Guardar inventario en Firebase</button></div>
 
-<details id="ageWebConfig" style="margin-top:12px"><summary style="cursor:pointer">Investigación web de edades (configuración única)</summary><p class="footnote">Opcional: pega la URL de tu servicio Cloudflare Worker. Se guarda en Firebase para todos los colaboradores. La clave del buscador debe permanecer como secreto en Cloudflare, nunca en el HTML.</p><div class="toolbar"><input id="ageWebUrl" type="url" placeholder="https://puntofarma-edades.usuario.workers.dev" aria-label="URL del servicio de investigación de edades"><button class="btn btn-line" id="saveAgeWeb" type="button">Guardar conexión</button></div><p class="footnote" id="ageWebStatus">Sin servicio de búsqueda web conectado. Se utilizan fichas conocidas y fuentes farmacológicas públicas.</p></details>
+<details id="ageWebConfig" style="margin-top:12px"><summary style="cursor:pointer">Investigación web de edades (configuración única)</summary><p class="footnote">Opcional: pega la URL de tu servicio Cloudflare Worker. Se guarda en Firebase para todos los colaboradores. La clave del buscador debe permanecer como secreto en Cloudflare, nunca en el HTML.</p><div class="toolbar"><input id="ageWebUrl" type="url" placeholder="https://puntofarma-edades.usuario.workers.dev" aria-label="URL del servicio de investigación de edades"><button class="btn btn-line" id="saveAgeWeb" type="button">Guardar conexión</button></div><p class="footnote" id="ageWebStatus">Sin servicio de búsqueda web conectado. Se utilizan fichas conocidas y fuentes farmacológicas públicas.</p><p class="footnote" id="ageWebUsage">Protección de créditos: máximo 20 nuevas consultas externas al día, compartidas entre colaboradores. No se cobran búsquedas cuando el cupo diario está agotado por esta web.</p></details>
 <details id="firebaseHelp"><summary>Información de Firebase</summary><p class="footnote">PuntoFARMA utiliza Firebase como fuente principal. La autenticación anónima debe estar habilitada y las reglas de Realtime Database deben autorizar las rutas <code>inventory</code> y <code>ageProfiles</code>. No abras la base a usuarios sin autenticar. La información de pacientes no se guarda.</p><p>Sesión: <code id="cloudUid">Sin conectar</code> <button class="btn btn-line" id="copyUid">Copiar identificador</button></p></details></div></details></div>
         <div class="card">
           <div class="section-title"><h3>Mi inventario</h3><div class="inv-actions"><button class="inv-icon" id="uploadInv" title="Cargar inventario inicial o reemplazar el catálogo completo" aria-label="Cargar catálogo">⇧</button><button class="inv-icon" id="updateStock" title="Actualizar las existencias por código mediante Excel" aria-label="Actualizar stock">⟳</button><button class="inv-icon" id="undoStock" title="Deshacer el último ajuste de stock" aria-label="Deshacer actualización">↶</button><button class="inv-icon inv-danger" id="clearInventory" title="Recargar el inventario desde Firebase" aria-label="Recargar inventario">♜</button></div></div>
@@ -291,7 +291,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
         </div>
       </section>
 
-<section class="page" id="page-seguridad"><div class="card"><h3>Ayuda y referencias</h3><div class="source-card"><strong>1. Confirma la información</strong><p>El análisis usa reglas limitadas; puede omitir o interpretar mal una frase. No supone edad, duración ni ausencia de riesgos.</p></div><div class="source-card"><strong>2. Prioriza la atención</strong><p>Una alerta interrumpe la búsqueda comercial. La ausencia de coincidencias automáticas no descarta una urgencia.</p></div><div class="source-card"><strong>3. Revisión de medicamentos</strong><p>Los módulos no habilitan prescripciones. Antes de proponer un medicamento se necesita una ficha específica, condición de dispensación en Ecuador y criterio del farmacéutico. Esta versión no tiene protocolos farmacéuticos aprobados.</p></div><div class="source-card"><strong>4. Inventario del navegador</strong><p>El catálogo corresponde a un archivo cargado, no a existencias en tiempo real. Confirma cantidad física, presentación, unidad de venta y precio.</p></div><div id="page-fuentes"><h3>Base de los casos y revisión</h3><div class="source-card"><strong>PHARMEC / PuntoFarma · 16 módulos</strong><p>Módulos 1–10 y 12–17. Se usan para organizar preguntas y situaciones de mostrador. Módulo 11 no recibido. No se importan automáticamente sus tablas síntoma → medicamento.</p></div><div class="source-card"><strong>Estado del contenido</strong><p>Adaptación editorial: 08/10/2026. Validación farmacéutica: pendiente. No hay dosis ni protocolos de selección automática habilitados.</p></div><div id="caseSources"></div></div></div></section>
+<section class="page" id="page-seguridad"><div class="card"><h3>Ayuda y referencias</h3><div class="source-card"><strong>1. Confirma la información</strong><p>El análisis usa reglas limitadas; puede omitir o interpretar mal una frase. No supone edad, duración ni ausencia de riesgos.</p></div><div class="source-card"><strong>2. Prioriza la atención</strong><p>Una alerta interrumpe la búsqueda comercial. La ausencia de coincidencias automáticas no descarta una urgencia.</p></div><div class="source-card"><strong>3. Revisión de medicamentos</strong><p>Los módulos no habilitan prescripciones. Antes de proponer un medicamento se necesita una ficha específica, condición de dispensación en Ecuador y criterio del farmacéutico. Esta versión no tiene protocolos farmacéuticos aprobados.</p></div><div class="source-card"><strong>4. Inventario del navegador</strong><p>El catálogo se sincroniza con Firebase; el stock puede cambiar por ventas no registradas en esta plataforma. Confirma cantidad física, presentación, unidad de venta y precio.</p></div><div id="page-fuentes"><h3>Base de los casos y revisión</h3><div class="source-card"><strong>PHARMEC / PuntoFarma · 16 módulos</strong><p>Módulos 1–10 y 12–17. Se usan para organizar preguntas y situaciones de mostrador. Módulo 11 no recibido. No se importan automáticamente sus tablas síntoma → medicamento.</p></div><div class="source-card"><strong>Estado del contenido</strong><p>Adaptación editorial: 08/10/2026. Validación farmacéutica: pendiente. No hay dosis ni protocolos de selección automática habilitados.</p></div><div id="caseSources"></div></div></div></section>
     </main>
   </div>
 </div>
@@ -777,10 +777,48 @@ async function loadAgeResearchUrl(){
  try{const r=await cloudRequestPath('/settings/ageResearchEndpoint.json');ageResearchServiceUrl=typeof r.value==='string'&&/^https:\/\//.test(r.value)?r.value.replace(/\/$/,''):''}
  catch(e){ageResearchServiceUrl=''}
  const field=$('ageWebUrl'),status=$('ageWebStatus');if(field)field.value=ageResearchServiceUrl;
- if(status)status.textContent=ageResearchServiceUrl?'Búsqueda web general configurada. Las edades se investigan en segundo plano (la conexión todavía debe verificarse).':'Búsqueda general NO ACTIVADA: configura el servicio web una sola vez para investigar marcas ecuatorianas desconocidas. Sin él solo se usan fichas conocidas y openFDA.';
+ if(status)status.textContent=ageResearchServiceUrl?'Búsqueda web configurada. Límite compartido: 20 consultas nuevas por día.':'Búsqueda general NO ACTIVADA: configura el servicio web una sola vez para investigar marcas ecuatorianas desconocidas. Sin él solo se usan fichas conocidas y openFDA.';
+ showAgeWebBudget();
+}
+// Protección de créditos Tavily: reserva compartida por día UTC con control de concurrencia Firebase.
+// No garantiza un límite contra llamadas directas a la URL del Worker: el servidor necesita
+// su propia autenticación/rate limit para aplicaciones públicas de alto tráfico.
+const AGE_WEB_DAILY_LIMIT=20;
+let ageWebDayExhausted='',ageWebDailyUsed=null;
+const ageWebDay=()=>new Date().toISOString().slice(0,10);
+function showAgeWebBudget(){
+ const e=$('ageWebUsage');if(!e)return;
+ const used=ageWebDailyUsed===null?'—':ageWebDailyUsed;
+ e.textContent='Consultas web de hoy (UTC): '+used+' / '+AGE_WEB_DAILY_LIMIT+'. Límite compartido en Firebase; cuando se agote, el inventario seguirá funcionando normalmente.';
+}
+async function reserveAgeWebCredit(){
+ if(!cloudUser||!ageResearchServiceUrl)return false;
+ const day=ageWebDay();if(day===ageWebDayExhausted)return false;
+ const path='/settings/ageResearchUsage/'+day+'.json';
+ for(let attempt=0;attempt<6;attempt++){
+  // Lectura con ETag para impedir que dos colaboradores reserven simultáneamente el mismo cupo.
+  const token=await cloudUser.getIdToken();
+  const base=firebaseConfig.databaseURL+path+'?auth='+encodeURIComponent(token);
+  const r=await fetch(base,{headers:{'X-Firebase-ETag':'true'},cache:'no-store'});
+  if(!r.ok)throw Error('Firebase: cupo no disponible ('+r.status+')');
+  const previous=await r.json(),used=Math.max(0,Number(previous?.used)||0);
+  ageWebDailyUsed=used;showAgeWebBudget();
+  if(used>=AGE_WEB_DAILY_LIMIT){ageWebDayExhausted=day;return false}
+  const etag=r.headers.get('ETag');
+  if(!etag)throw Error('Firebase no devolvió ETag para reservar la búsqueda');
+  const next={used:used+1,updatedAt:Date.now()};
+  const put=await fetch(base,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(next),cache:'no-store'});
+  if(put.status===412)continue; // Otra computadora reservó el cupo primero.
+  if(!put.ok)throw Error('Firebase no confirmó la reserva ('+put.status+')');
+  ageWebDailyUsed=used+1;showAgeWebBudget();return true;
+ }
+ throw Error('Reserva simultánea: reintentar búsqueda más tarde');
 }
 async function researchAgeOnWeb(p,signal){
  if(!ageResearchServiceUrl)return null;
+ // Una consulta que no haya sido reservada nunca llega al Worker de búsqueda.
+ const permitted=await reserveAgeWebCredit();if(!permitted)return null;
+ if(signal?.aborted)return null;
  const u=new URL(ageResearchServiceUrl+'/edad');u.searchParams.set('nombre',p.name||'');u.searchParams.set('presentacion',p.presentation||'');u.searchParams.set('activo',p.active||'');
  const r=await fetch(u.toString(),{signal,cache:'no-store'});if(!r.ok)throw Error('Servicio externo '+r.status);
  const d=await r.json();
@@ -788,7 +826,7 @@ async function researchAgeOnWeb(p,signal){
  if(!/^https:\/\//.test(d.source)||d.label.length>95)return null;
  return {label:d.label,source:d.source,note:'Consulta web: confirmar presentación ecuatoriana antes de dispensar.'};
 }
-const AGE_STORE_KEY='pf_verified_age_v337';
+const AGE_STORE_KEY='pf_verified_age_v338';
 const AGE_ENGINE_VERSION=337;
 const AGE_KNOWN_TTL=30*86400000, AGE_MISS_TTL=18*3600000;
 let ageActiveCalls=0;
@@ -1289,7 +1327,8 @@ $('saveAgeWeb').onclick=async()=>{
  const status=$('ageWebStatus');status.textContent='Guardando configuración…';
  try{
   await cloudRequestPath('/settings/ageResearchEndpoint.json','PUT',url||null);
-  ageResearchServiceUrl=url;status.textContent=url?'URL guardada en Firebase. Se intentará investigar edades pendientes; verifica la conexión con un producto de prueba.':'Conector web desactivado.';
+  ageResearchServiceUrl=url;status.textContent=url?'URL guardada en Firebase. Máximo 20 búsquedas externas por día (compartidas). Prueba un medicamento.':'Conector web desactivado.';
+  showAgeWebBudget();
   for(const [id,state] of productAgeState.entries())if(state==='missing'||state==='offline')productAgeState.delete(id);
   scanAllProductAges();
  }catch(e){status.textContent='No se pudo guardar la conexión: '+e.message}
