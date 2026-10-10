@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PuntoFARMA · Asistente de Atención</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#15213b;--muted:#68748b;--line:#e5eaf2;--brand:#0d7b52;--brand2:#16a36f;--ok:#087a55;--warn:#a76700;--danger:#b42318;--soft:#eef7f3;--shadow:0 12px 30px rgba(18,38,63,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var(--ink)}
+button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;padding:18px}.topbar{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#086845,#0a8d5e);color:#fff;padding:18px 20px;border-radius:20px;box-shadow:var(--shadow);position:sticky;top:10px;z-index:10}.logo{width:48px;height:48px;border-radius:14px;background:#fff;color:var(--brand);display:grid;place-items:center;font-weight:900;font-size:21px}.brand{min-width:230px}.brand h1{font-size:19px;margin:0}.brand small{opacity:.82}.global-search{flex:1;position:relative}.global-search input{width:100%;border:0;border-radius:13px;padding:14px 46px 14px 16px;outline:none;color:#13203a}.global-search .kbd{position:absolute;right:10px;top:10px;background:#eef1f6;color:#697386;border-radius:8px;padding:4px 8px;font-size:12px}.head-actions{display:flex;gap:8px}.btn{border:0;border-radius:11px;padding:11px 14px;cursor:pointer;font-weight:700}.btn-white{background:#fff;color:#086845}.btn-green{background:var(--brand);color:#fff}.btn-soft{background:#edf5f2;color:#086845}.btn-line{background:#fff;border:1px solid var(--line);color:var(--ink)}.btn-danger{background:#fff1f0;color:var(--danger)}
+.notice{margin:14px 0;background:#fff8e8;border:1px solid #f2d99a;border-radius:14px;padding:11px 14px;color:#79531a;font-size:13px;display:flex;gap:9px;align-items:flex-start}.layout{display:grid;grid-template-columns:245px 1fr;gap:16px}.sidebar{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;height:max-content;position:sticky;top:100px}.nav{display:flex;flex-direction:column;gap:5px}.nav button{display:flex;gap:10px;align-items:center;width:100%;border:0;background:transparent;padding:12px 13px;border-radius:11px;text-align:left;color:#4d5a72;cursor:pointer}.nav button.active{background:var(--soft);color:var(--brand);font-weight:800}.side-card{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.mini-stat{display:flex;justify-content:space-between;font-size:13px;margin:8px 2px;color:var(--muted)}.mini-stat b{color:var(--ink)}.content{min-width:0}.page{display:none}.page.active{display:block}.hero{display:grid;grid-template-columns:1.5fr .8fr;gap:14px;margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(18,38,63,.035)}.hero h2{margin:0 0 6px;font-size:26px}.hero p{margin:0;color:var(--muted)}.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.quick{border:1px solid var(--line);background:#fff;border-radius:13px;padding:14px;cursor:pointer;text-align:left}.quick:hover{border-color:#aad9c8;background:#f8fcfa}.quick strong{display:block}.quick span{font-size:12px;color:var(--muted)}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;height:100%}.kpi{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:13px}.kpi .n{font-size:24px;font-weight:900}.kpi .l{font-size:12px;color:var(--muted)}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.section-title h3{margin:0;font-size:17px}.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product{border:1px solid var(--line);border-radius:15px;padding:14px;cursor:pointer;background:#fff;transition:.15s}.product:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(18,38,63,.07);border-color:#cbd6e5}.product-top{display:flex;justify-content:space-between;gap:12px}.product h4{margin:0 0 4px;font-size:15px}.code{font-size:11px;color:var(--muted)}.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.chip{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:5px 8px;background:#f1f4f8;color:#546074;font-size:11px}.chip.ok{background:#eaf7f1;color:#06724e}.chip.warn{background:#fff5df;color:#8d5e00}.chip.danger{background:#fff0ef;color:#a72b23}.price{font-weight:900;font-size:16px;white-space:nowrap}.empty{text-align:center;padding:42px 20px;color:var(--muted)}.empty .ico{font-size:38px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 12px;outline:none}.toolbar input{flex:1;min-width:230px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th{position:sticky;top:0;background:#f7f9fc;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}.table td{padding:10px;border-bottom:1px solid #eef1f5;vertical-align:top}.table tr:hover td{background:#fbfcfe}
+.wizard{display:grid;grid-template-columns:1fr .8fr;gap:14px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:12px;font-weight:800;color:#59657b;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none}.field.full{grid-column:1/-1}.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.check{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px;font-size:13px}.decision{border-radius:15px;padding:16px;background:#f7faf9;border:1px solid #d8e8e1}.decision h3{margin:0 0 8px}.decision ul{padding-left:18px;color:#4c586e}.level{font-weight:900;border-radius:9px;padding:7px 9px;display:inline-block;margin-bottom:8px}.level.green{background:#e8f7f0;color:#08744f}.level.yellow{background:#fff5db;color:#896000}.level.red{background:#ffefed;color:#a52920}.flowbox{border:1px dashed #cbd6e4;border-radius:14px;padding:14px;margin-top:12px}.flowbox h4{margin:0 0 8px}.flow-items{display:flex;flex-wrap:wrap;gap:7px}.flow-items button{border:1px solid var(--line);border-radius:99px;background:#fff;padding:8px 10px;cursor:pointer}.flow-items button.active{background:#eaf7f1;color:#08744f;border-color:#b9decf}
+.case-box{background:linear-gradient(135deg,#f7fbf9,#eef7f3);border:1px solid #cfe5dc;border-radius:15px;padding:14px;margin-bottom:14px}.case-box textarea{width:100%;min-height:86px;resize:vertical;border:1px solid #d5e1dc;border-radius:11px;padding:12px;background:#fff;outline:none}.case-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}.case-summary{margin-top:9px;font-size:12px;color:var(--muted)}.suggestion{display:none;margin:0 0 12px;padding:10px 12px;border-radius:11px;background:#f5f8fc;border:1px solid #dde5ef;font-size:13px}.suggestion.show{display:block}.suggestion button{border:0;background:transparent;color:var(--brand);font-weight:800;cursor:pointer;padding:0}.med-options{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}.med-option{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}.med-option-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.med-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.btn-mini{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:750;cursor:pointer}.btn-mini:hover{background:#f7faf9}.image-btn{background:#f4f7fb;color:#31425f}.clinical-tag{font-size:11px;color:#6a768b;margin-top:3px}.age-hint{font-size:11px;color:var(--muted);margin-top:5px}
+.use-card{border:1px solid #cfe5dc;background:#f4fbf8;border-radius:14px;padding:14px;margin:14px 0}.use-card h3{margin:0 0 6px;font-size:16px}.use-card p{margin:0;color:#405064;line-height:1.5}.detail-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}.detail-card{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff}.detail-card h4{margin:0 0 6px;font-size:14px}.detail-card p,.detail-card ul{margin:0;color:#516078;font-size:13px;line-height:1.55}.detail-card ul{padding-left:18px}.detail-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:#f8fafc;border-radius:12px;padding:11px 13px;font-weight:800;cursor:pointer;margin:12px 0}.detail-panel{display:none}.detail-panel.open{display:block}.knowledge-badge{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:5px 8px;background:#eef5ff;color:#315d91;font-size:11px;font-weight:700}.knowledge-badge.pending{background:#fff5df;color:#8d5e00}.product-use{margin-top:7px;color:#59677d;font-size:12px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.intent-hint{padding:9px 11px!important}.similar-title{margin-top:12px!important}.notfound-card p{margin:5px 0 8px}.product{padding:12px}.product h4{line-height:1.25}.online-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.online-tools .btn{font-size:12px;padding:9px 11px}
+.drawer{position:fixed;right:-570px;top:0;width:min(560px,96vw);height:100vh;background:#fff;z-index:30;box-shadow:-18px 0 40px rgba(18,38,63,.16);transition:.22s;overflow:auto;padding:22px}.drawer.open{right:0}.overlay{position:fixed;inset:0;background:rgba(20,31,49,.38);z-index:29;display:none}.overlay.show{display:block}.drawer-head{display:flex;justify-content:space-between;gap:12px}.drawer-head h2{margin:0}.close{border:0;background:#f1f4f8;border-radius:10px;width:38px;height:38px;cursor:pointer}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:18px 0}.info{background:#f7f9fc;border-radius:11px;padding:10px}.info small{display:block;color:var(--muted);margin-bottom:3px}.safe-box{border-radius:13px;padding:13px;margin:12px 0}.safe-box.warn{background:#fff7e5;border:1px solid #f1d690}.safe-box.danger{background:#fff0ef;border:1px solid #efc1bd}.safe-box.ok{background:#edf8f3;border:1px solid #c7e6da}.alternatives{display:flex;flex-direction:column;gap:8px}.alt{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}.alt:hover{background:#fafcfd}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,25,42,.48);z-index:40;padding:18px}.modal.show{display:flex}.modal-card{width:min(760px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:20px}.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.map-grid label{font-size:12px;font-weight:800}.map-grid select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;margin-top:5px}.footnote{color:var(--muted);font-size:12px;line-height:1.5}.source-card{border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:10px}.source-card strong{display:block;margin-bottom:4px}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:#b9c2cf}.status-dot.on{background:#15a36e}.toast{position:fixed;bottom:22px;right:22px;background:#162239;color:#fff;border-radius:12px;padding:12px 15px;z-index:60;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.sidebar{position:static}.nav{flex-direction:row;overflow:auto}.nav button{min-width:max-content}.hero,.wizard{grid-template-columns:1fr}.results{grid-template-columns:1fr}.topbar{flex-wrap:wrap}.brand{min-width:unset}.global-search{order:3;flex-basis:100%}}
+@media(max-width:650px){.shell{padding:8px}.topbar{top:4px;border-radius:15px}.quick-grid{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr}.form-grid,.checks,.info-grid,.map-grid{grid-template-columns:1fr}.card{padding:14px}}
+
+/* v3.2 · ficha compacta */
+.quick-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.quick-fact{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}.quick-fact small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}.quick-fact b{font-size:13px}.brief-note{border-left:3px solid #0a8b61;background:#f5fbf8;border-radius:8px;padding:9px 11px;margin:10px 0;color:#42516a;font-size:12px;line-height:1.45}.brief-note.warn{border-left-color:#e4a11b;background:#fffaf0}.source-mini{font-size:10px;color:var(--muted);margin-top:8px}.drawer .use-card{margin:10px 0;padding:12px}.drawer h3{margin-top:14px}.age-ok{background:#eaf7f1;color:#06724e}.age-check{background:#fff5df;color:#8d5e00}.decision-compact ul{margin:8px 0;padding-left:18px}.decision-compact li{margin:4px 0}.meta .chip.general-hide{display:none}
+
+/* v3.9 · búsqueda por intención, flujo rápido, visor interno y demanda no atendida */
+.web-modal{position:fixed;inset:0;background:rgba(15,27,45,.58);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}.web-modal.show{display:flex}.web-card{width:min(1120px,97vw);height:min(820px,94vh);background:#fff;border-radius:18px;box-shadow:0 26px 70px rgba(10,30,50,.3);overflow:hidden;display:flex;flex-direction:column}.web-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:#fbfcfe}.web-head-main{min-width:0}.web-head-main b{display:block;font-size:15px}.web-query{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:720px;margin-top:2px}.web-head-actions{display:flex;gap:7px;flex-shrink:0}.web-frame-wrap{flex:1;min-height:0;background:#fff;position:relative}.web-frame{width:100%;height:100%;border:0;background:#fff}.web-fallback{position:absolute;left:14px;right:14px;bottom:12px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:11px;color:var(--muted);pointer-events:none}.case-webbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}.match-why{font-size:11px;color:#3f6b59;background:#eef8f3;border-radius:8px;padding:6px 8px;margin-top:7px}.btn-web{background:#eef5ff;color:#315d91;border-color:#d8e5f5}.pending-use{background:#f6f9fd;border-color:#dce7f5}.pending-use h3{color:#315d91}.source-link{font-size:11px;color:#315d91;margin-top:6px}.web-inline-note{font-size:11px;color:var(--muted);margin-top:7px}.web-icon{font-weight:900}
+.case-enter-hint{font-size:11px;color:var(--muted);margin-top:7px}.notfound-card{grid-column:1/-1;border:1px solid #d9e2ee;background:#fbfcfe;border-radius:15px;padding:16px}.notfound-card h3{margin:0 0 5px;font-size:16px}.notfound-card p{margin:5px 0;color:var(--muted);font-size:12px}.demand-ok{display:inline-flex;gap:6px;align-items:center;background:#eaf7f1;color:#06724e;border-radius:99px;padding:6px 9px;font-size:11px;font-weight:700}.similar-title{grid-column:1/-1;margin:4px 0 0;font-size:14px}.text-link{border:0;background:transparent;padding:0;color:#315d91;text-decoration:underline;cursor:pointer;font:inherit}.product.no-click{cursor:default}.product.no-click:hover{transform:none;box-shadow:none}.mini-stat .demand{color:#8d5e00}.intent-hint{margin-top:10px;padding:10px 12px;border-radius:12px;background:#eef8f4;border:1px solid #cfe9de;color:#245c49;font-size:12px;line-height:1.45}.intent-hint b{color:#0b704f}
+
+
+.case-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.case-actions button{font-size:14px}.case-checklist{padding-left:21px;line-height:1.6}.case-checklist li{margin:8px 0}.case-topic{display:inline-block;padding:5px 9px;background:#edf5f2;border-radius:7px;margin:4px;font-size:14px}.case-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.case-section h4{margin:0 0 10px}.case-source{font-size:13px;line-height:1.6;color:var(--muted)}.case-alert{padding:12px;border-left:4px solid var(--danger);background:#fff1f0;margin:12px 0}.case-summary{line-height:1.6}button:focus-visible,a:focus-visible{outline:3px solid #16a36f;outline-offset:3px}.decision input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px}.wizard .decision{font-size:15px}summary{cursor:pointer}.wizard .form-grid label{font-size:14px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="logo">PF</div>
+    <div class="brand"><h1>PuntoFARMA</h1><small>Asistente de atención · MVP v3.14 · Casos guiados</small></div>
+    <div class="global-search"><input id="globalSearch" placeholder="Buscar producto, principio activo, código o categoría…" autocomplete="off"><span class="kbd">Ctrl K</span></div>
+    <div class="head-actions"><button class="btn btn-white" id="uploadTop">↥ Inventario</button></div>
+  </header>
+
+  <div class="notice"><span>ℹ️</span><div><b>Asistente de mostrador.</b> Análisis guiado en revisión farmacéutica. <span id="inventoryStamp">Archivo: fecha no disponible; confirma existencias.</span></div></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="active" data-page="consulta">⌕ Consulta</button>
+        <button data-page="orientacion">✚ Orientar atención</button>
+        <button data-page="inventario">▦ Inventario</button>
+        <button data-page="seguridad">⚠ Seguridad</button>
+        <button data-page="fuentes">◉ Fuentes</button>
+      </nav>
+      <div class="side-card">
+        <div class="mini-stat"><span>Catálogo</span><b id="sideCount">0 SKU</b></div>
+        <div class="mini-stat"><span>Con stock</span><b id="sideStock">0</b></div>
+        <div class="mini-stat"><span>Stock bajo</span><b id="sideLow">0</b></div>
+        <div class="mini-stat"><span>No disponibles</span><b id="sideDemand" class="demand">0</b></div>
+        <div class="mini-stat"><span>Estado</span><b><span id="statusDot" class="status-dot"></span><span id="statusText">Sin cargar</span></b></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="page active" id="page-consulta">
+        <div class="hero">
+          <div class="card">
+            <h2>¿Qué necesita el cliente?</h2>
+            <p>Busca un producto o describe el caso.</p>
+            <div class="quick-grid">
+              <button class="quick" data-symptom="dolor"><strong>🤕 Dolor</strong><span>Leve, inflamatorio, muscular</span></button>
+              <button class="quick" data-symptom="respiratorio"><strong>😷 Respiratorio</strong><span>Tos, congestión, garganta</span></button>
+              <button class="quick" data-symptom="gastro"><strong>🫃 Gastrointestinal</strong><span>Acidez, diarrea, náusea</span></button>
+              <button class="quick" data-symptom="antibiotico"><strong>💊 Antibiótico</strong><span>Validación obligatoria de receta</span></button>
+            </div>
+          </div>
+          <div class="card"><div class="kpis">
+            <div class="kpi"><div class="n" id="kpiSku">0</div><div class="l">SKU cargados</div></div>
+            <div class="kpi"><div class="n" id="kpiUnits">0</div><div class="l">Unidades detectadas</div></div>
+            <div class="kpi"><div class="n" id="kpiValue">—</div><div class="l">Valor visible*</div></div>
+          </div><p class="footnote" style="margin-top:10px">*Solo si el archivo incluye precio y stock/cantidad.</p></div>
+        </div>
+        <div class="card">
+          <div class="section-title"><h3>Resultados</h3><span class="footnote" id="resultLabel">Carga tu inventario para comenzar</span></div>
+          <div id="suggestionBar" class="suggestion"></div>
+          <div id="results" class="results"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-orientacion">
+        <div class="wizard">
+          <div class="card">
+            <div class="section-title"><h3>Orientación de mostrador</h3><span class="chip warn">No diagnostica</span></div>
+            <div class="case-box">
+              <b>✨ Describe el caso como te lo cuenta el cliente</b>
+              <p class="footnote" style="margin:5px 0 8px">Ej.: “Niño de 8 años con tos seca desde hace dos días, sin fiebre.”</p>
+              <textarea id="caseText" placeholder="Escribe el caso en lenguaje natural…"></textarea>
+              <div class="case-enter-hint">Presiona <b>Enter</b> para analizar · <b>Shift+Enter</b> para escribir en otra línea.</div>
+              <div class="case-actions"><button class="btn btn-green" onclick="interpretFreeCase()">Analizar caso</button><button class="btn btn-line" onclick="resetWizard()">Nuevo caso</button></div><p class="footnote">Análisis por reglas y palabras clave: confirma lo interpretado. No incluyas nombres, cédulas ni teléfonos.</p><details><summary>Probar un caso de ejemplo</summary><div id="exampleCases" class="case-actions"></div></details><div id="caseSummary" class="case-summary" aria-live="polite"></div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label>¿Para quién es?</label><select id="patient"><option value="">Por confirmar</option><option value="adulto">Adulto</option><option value="nino">Niño</option><option value="adultomayor">Adulto mayor</option><option value="embarazo">Embarazo / lactancia</option></select></div>
+              <div class="field"><label>Edad (años)</label><input id="patientAge" type="number" min="0" max="120" step="0.01" placeholder="Ej.: 8"><div class="age-hint">Si es un bebé, escribe su edad en meses en el caso.</div></div>
+              <div class="field"><label>¿Desde cuándo?</label><select id="duration"><option value="">Por confirmar</option><option value="hoy">Hoy / reciente</option><option value="2-3">2–3 días</option><option value="persistente">Más de 3 días / persistente</option><option value="cronico">Semanas o recurrente</option></select></div>
+              <div class="field full"><label>¿Qué síntomas tiene?</label><input id="symptoms" placeholder="Ej.: tos con flema, dolor de garganta, fiebre…"></div>
+              <div class="field full"><label>¿Toma algo más?</label><input id="otherMeds" placeholder="Medicamentos, suplementos, anticoagulantes, sedantes…"></div>
+              <div class="field full"><label for="allergies">Alergias conocidas</label><input id="allergies" placeholder="Indicar cuáles, ninguna conocida o desconocido"></div><div class="field full"><label for="conditions">Antecedentes / embarazo o lactancia</label><input id="conditions" placeholder="Datos confirmados o desconocido"></div><div class="field full"><label for="alarmCheck">¿Se revisaron las señales de alarma?</label><select id="alarmCheck"><option value="">Por preguntar</option><option value="no">No refiere, tras preguntar</option><option value="yes">Sí refiere alguna / hay duda</option></select></div><div class="field full"><label>Señales comunicadas por el cliente</label><div class="checks">
+                <label class="check"><input type="checkbox" class="redflag" value="respirar"> Dificultad para respirar</label>
+                <label class="check"><input type="checkbox" class="redflag" value="hinchazon"> Hinchazón de labios o lengua</label>
+                <label class="check"><input type="checkbox" class="redflag" value="sangrado"> Sangrado</label>
+                <label class="check"><input type="checkbox" class="redflag" value="confusion"> Confusión / desmayo</label>
+              </div></div>
+              <div class="field full"><label>¿Qué tipo de consulta es?</label><div class="flow-items" id="flowTypes">
+                <button data-flow="dolor">Dolor</button><button data-flow="resfriado">Resfriado / gripe</button><button data-flow="tosseca">Tos seca</button><button data-flow="tosflema">Tos con flema</button><button data-flow="gastro">Digestivo</button><button data-flow="antibiotico">Antibiótico</button><button data-flow="urinario">Urinario</button><button data-flow="piel">Piel</button><button data-flow="cardiovascular">Cardiovascular</button><button data-flow="nervioso">Sueño / nervios</button><button data-flow="anticoncepcion">Salud sexual</button><button data-flow="interacciones">Interacciones</button><button data-flow="otro">Otro</button>
+              </div></div>
+            </div>
+            
+          </div>
+          <div class="card"><div id="decision" class="decision"><span class="level yellow">Pendiente</span><h3>Completa las preguntas</h3><p class="footnote">La plataforma necesita contexto mínimo antes de orientar. No se guardan datos del cliente.</p></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-inventario"><div class="card" style="margin-bottom:16px">
+<h3>☁ Inventario en Firebase</h3>
+<p id="cloudStatus" role="status">Inventario local · Firebase pendiente de conexión.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn btn-green" id="cloudConnect">Conectar dispositivo</button><button class="btn btn-line" id="cloudLoad" disabled>Traer inventario de Firebase</button><button class="btn btn-green" id="cloudSave" disabled>Guardar inventario en Firebase</button></div>
+<p class="footnote">La carga de Excel se guarda primero en este navegador. Pulsa Guardar para compartirla. Traer reemplaza la copia local. Limpiar catálogo solo borra la copia local. Los casos y solicitudes no se envían a Firebase.</p>
+<details><summary>Activar acceso sin correo ni contraseña</summary>
+<ol><li>Firebase → Authentication → Método de acceso → Anónimo → Habilitar y guardar.</li><li>Abre esta web desde GitHub Pages y pulsa Conectar dispositivo.</li><li>Copia el identificador que aparece debajo. En Realtime Database → Datos, agrega un nodo <b>devices</b>; dentro agrega ese identificador con valor booleano <b>true</b> (sin comillas).</li><li>En Realtime Database → Reglas, publica las reglas de abajo. Después pulsa Conectar dispositivo otra vez.</li><li>Repite la autorización para cada navegador que utilizará el inventario. Borrar los datos del navegador o usar incógnito puede generar otro identificador.</li></ol>
+<p>Este navegador: <code id="cloudUid">Aún no conectado</code> <button class="btn btn-line" id="copyUid">Copiar identificador</button></p>
+<pre style="white-space:pre-wrap;overflow-wrap:anywhere">{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "inventory": {
+      ".read": "auth != null &amp;&amp; root.child('devices').child(auth.uid).val() === true",
+      ".write": "auth != null &amp;&amp; root.child('devices').child(auth.uid).val() === true",
+      ".validate": "newData.hasChildren(['schema', 'payload', 'updatedAt']) &amp;&amp; newData.child('schema').val() === 1 &amp;&amp; newData.child('payload').isString() &amp;&amp; newData.child('updatedAt').isNumber()"
+    }
+  }
+}</pre><p class="footnote">Cada dispositivo autorizado puede consultar y reemplazar el inventario. Para revocarlo, elimina su identificador de devices. La autenticación anónima identifica el navegador sin pedir registro al colaborador.</p></details></div>
+        <div class="card">
+          <div class="section-title"><h3>Inventario</h3><div><button class="btn btn-green" id="uploadInv">↥ Cargar / reemplazar Excel</button> <button class="btn btn-danger" id="clearInventory">Limpiar catálogo</button></div></div>
+          <div class="toolbar"><input id="invSearch" placeholder="Filtrar inventario…"><select id="stockFilter"><option value="all">Todo el stock</option><option value="available">Con stock</option><option value="low">Stock bajo (≤5)</option><option value="zero">Sin stock</option></select></div>
+          <div class="table-wrap"><table class="table"><thead><tr><th>Código</th><th>Producto</th><th>Principio activo</th><th>Presentación</th><th>Stock</th><th>Precio</th><th>Categoría</th></tr></thead><tbody id="inventoryBody"></tbody></table></div>
+          <p class="footnote">El cargador intenta reconocer automáticamente nombres de columnas comunes. Si no encuentra una columna clave, te muestra un mapeo manual.</p>
+        </div>
+      </section>
+
+<section class="page" id="page-seguridad"><div class="card"><h3>Cómo usar el asistente de casos</h3><div class="source-card"><strong>1. Confirma la información</strong><p>El análisis usa reglas limitadas; puede omitir o interpretar mal una frase. No supone edad, duración ni ausencia de riesgos.</p></div><div class="source-card"><strong>2. Prioriza la atención</strong><p>Una alerta interrumpe la búsqueda comercial. La ausencia de coincidencias automáticas no descarta una urgencia.</p></div><div class="source-card"><strong>3. Revisión de medicamentos</strong><p>Los módulos no habilitan prescripciones. Antes de proponer un medicamento se necesita una ficha específica, condición de dispensación en Ecuador y criterio del farmacéutico. Esta versión no tiene protocolos farmacéuticos aprobados.</p></div><div class="source-card"><strong>4. Inventario del navegador</strong><p>El catálogo corresponde a un archivo cargado, no a existencias en tiempo real. Confirma cantidad física, presentación, unidad de venta y precio.</p></div></div></section><section class="page" id="page-fuentes"><div class="card"><h3>Base de los casos y revisión</h3><div class="source-card"><strong>PHARMEC / PuntoFarma · 16 módulos</strong><p>Módulos 1–10 y 12–17. Se usan para organizar preguntas y situaciones de mostrador. Módulo 11 no recibido. No se importan automáticamente sus tablas síntoma → medicamento.</p></div><div class="source-card"><strong>Estado del contenido</strong><p>Adaptación editorial: 08/10/2026. Validación farmacéutica: pendiente. No hay dosis ni protocolos de selección automática habilitados.</p></div><div id="caseSources"></div></div></section>
+    </main>
+  </div>
+</div>
+<input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden />
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal" id="mapModal"><div class="modal-card"><div class="section-title"><h3>Mapear columnas del inventario</h3><button class="close" id="closeMap">×</button></div><p class="footnote">Selecciona qué columna del Excel corresponde a cada dato. Producto es obligatorio; las demás son opcionales.</p><div class="map-grid" id="mapGrid"></div><div style="margin-top:16px"><button class="btn btn-green" id="applyMap">Aplicar y cargar</button></div></div></div>
+
+<div class="web-modal" id="webModal">
+  <div class="web-card">
+    <div class="web-head">
+      <div class="web-head-main"><b id="webTitle">Consulta web</b><span class="web-query" id="webQueryText"></span></div>
+      <div class="web-head-actions"><button class="btn btn-line" id="webOpenNew">↗ Abrir Google</button><button class="close" id="webClose">×</button></div>
+    </div>
+    <div class="web-frame-wrap">
+      <iframe class="web-frame" id="webFrame" title="Consulta web"></iframe>
+      <div class="web-fallback">Si Google no se visualiza dentro de esta ventana, usa “Abrir Google”. La búsqueda ya está preparada.</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const LS='puntofarma_mvp_catalog_v2';
+const LSMAP='puntofarma_mvp_map_v2';
+const LSDEMAND='puntofarma_demanda_no_atendida_v1';
+let catalog=[],rawRows=[],headers=[],currentMap={},activeFlow='',caseHasRun=false;
+const $=id=>document.getElementById(id);
+const norm=s=>(s??'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+const text=v=>(v??'').toString().trim();
+const num=v=>{if(typeof v==='number')return Number.isFinite(v)?v:0;let s=text(v).replace(/[$\s]/g,'');if(s.includes(',')&&s.includes('.')){s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'')}else if(s.includes(','))s=s.replace(',','.');let n=Number(s);return Number.isFinite(n)?n:0};
+const money=v=>Number.isFinite(Number(v))&&Number(v)!==0?new Intl.NumberFormat('es-EC',{style:'currency',currency:'USD'}).format(Number(v)):'—';
+function toast(m){let e=$('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
+function save(){try{localStorage.setItem(LS,JSON.stringify(catalog));localStorage.setItem(LSMAP,JSON.stringify(currentMap))}catch(e){toast('Catálogo cargado, pero el navegador no pudo guardarlo permanentemente.')}}
+function load(){try{catalog=JSON.parse(localStorage.getItem(LS)||'[]');currentMap=JSON.parse(localStorage.getItem(LSMAP)||'{}')}catch(e){catalog=[]}catalog.forEach((p,i)=>{p._i=Number.isFinite(Number(p._i))?Number(p._i):i;p._search=norm([p.code,p.name,p.active,p.presentation,p.category,p.lab,Object.values(p.raw||{}).join(' ')].join(' '))});updateAll()}
+function aliases(){return{
+ code:['CODIGO','COD','SKU','ITEM','COD PRODUCTO','CODIGO PRODUCTO','CODIGO ITEM','ID','BARRAS','COD BARRA'],
+ name:['DESCRIPCION','PRODUCTO','NOMBRE PRODUCTO','NOMBRE','DESCRIPCION PRODUCTO','ITEM DESCRIPCION','DETALLE'],
+ active:['PRINCIPIO ACTIVO','PRINCIPIO','GENERICO','GENERICA','DCI','NOMBRE GENERICO'],
+ presentation:['PRESENTACION','FORMA FARMACEUTICA','FORMA','EMPAQUE','UNIDAD PRESENTACION'],
+ concentration:['CONCENTRACION','DOSIS'],
+ stock:['STOCK','CANTIDAD','EXISTENCIA','UNIDADES','SALDO','CANT','QTY'],
+ price:['PVP','PRECIO','PRECIO VENTA','PRECIO PUBLICO','VALOR VENTA','P V P'],
+ cost:['PVF','COSTO','PRECIO COMPRA','VALOR COMPRA'],
+ category:['CATEGORIA','GRUPO','CLASE','LINEA','FAMILIA'],
+ lab:['LABORATORIO','MARCA','FABRICANTE','CASA COMERCIAL'],
+ register:['REGISTRO SANITARIO','REG SANITARIO','REGISTRO ARCSA','REGISTRO']
+}}
+function inferMap(hs){let A=aliases(),map={};for(let k in A){let best=hs.find(h=>A[k].includes(norm(h)))||hs.find(h=>A[k].some(a=>norm(h).includes(a)||a.includes(norm(h))));if(best)map[k]=best}return map}
+function normalizeRows(rows,map){return rows.map((r,i)=>({
+ _i:i, code:text(r[map.code]), name:text(r[map.name]), active:text(r[map.active]), presentation:[text(r[map.presentation]),text(r[map.concentration])].filter(Boolean).join(' · '), stock:num(r[map.stock]), price:num(r[map.price]), cost:num(r[map.cost]), category:text(r[map.category]), lab:text(r[map.lab]), register:text(r[map.register]), raw:r
+ })).filter(x=>x.name||x.code).map(x=>{x._search=norm([x.code,x.name,x.active,x.presentation,x.category,x.lab,Object.values(x.raw||{}).join(' ')].join(' '));return x})}
+function readFile(f){
+ window.pendingInventoryName=f.name;if(typeof XLSX==='undefined'){toast('No se pudo cargar el lector Excel. Verifica conexión a internet.');return}let fr=new FileReader();fr.onload=e=>{try{let wb=XLSX.read(e.target.result,{type:'array',cellDates:false});let ws=wb.Sheets[wb.SheetNames[0]];rawRows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});headers=rawRows.length?Object.keys(rawRows[0]):[];if(!headers.length)throw new Error('No se encontraron encabezados.');currentMap=inferMap(headers);if(!currentMap.name){showMap()}else{catalog=normalizeRows(rawRows,currentMap);save();recordInventoryImport();updateAll();toast(`Inventario cargado: ${catalog.length} registros`)}}catch(err){alert('No se pudo leer el archivo: '+err.message)}};fr.readAsArrayBuffer(f)}
+function showMap(){let labels={code:'Código',name:'Producto / descripción *',active:'Principio activo',presentation:'Presentación',concentration:'Concentración',stock:'Stock / cantidad',price:'Precio PVP',cost:'Costo / PVF',category:'Categoría',lab:'Laboratorio / marca',register:'Registro sanitario'};let html='';for(let k of Object.keys(labels)){html+=`<div><label>${labels[k]}<select data-map="${k}"><option value="">— No usar —</option>${headers.map(h=>`<option ${currentMap[k]===h?'selected':''} value="${esc(h)}">${esc(h)}</option>`).join('')}</select></label></div>`}$('mapGrid').innerHTML=html;$('mapModal').classList.add('show')}
+function esc(s){return text(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function getDemandLog(){try{return JSON.parse(localStorage.getItem(LSDEMAND)||'[]')}catch(e){return[]}}
+function saveDemandLog(rows){try{localStorage.setItem(LSDEMAND,JSON.stringify(rows))}catch(e){}}
+function registerDemand(q,reason='No disponible'){
+ q=text(q).trim();if(!q)return null;let key=norm(q),rows=getDemandLog(),now=new Date().toISOString(),r=rows.find(x=>x.key===key);
+ if(r){r.count=(r.count||0)+1;r.lastAt=now;r.query=q;r.reason=reason}else{r={key,query:q,count:1,firstAt:now,lastAt:now,reason};rows.unshift(r)}
+ rows=rows.sort((a,b)=>String(b.lastAt).localeCompare(String(a.lastAt))).slice(0,200);saveDemandLog(rows);updateDemandCount();return r;
+}
+function updateDemandCount(){let e=$('sideDemand');if(e)e.textContent=getDemandLog().reduce((a,x)=>a+(Number(x.count)||0),0)}
+
+// Motor semántico: traduce frases cotidianas a intención farmacológica antes de buscar en el inventario.
+const INTENT_RULES=[
+ {id:'emergency_contraception',label:'Anticoncepción de emergencia',flow:'anticoncepcion',patterns:[/PASTILLA.*(NO QUEDAR|EVITAR).*EMBARAZ/,/(NO QUEDAR|EVITAR).*EMBARAZ/,/PASTILLA.*DIA DESPUES/,/DIA DESPUES/,/POST\s?DAY/,/RELACION.*SIN PROTECCION/,/SE ROMPIO.*(CONDON|PRESERVATIVO)/,/FALLO.*(CONDON|PRESERVATIVO|ANTICONCEPT)/,/ANTICONCEPCION.*EMERGEN/],terms:['LEVONORGESTREL','ESCAPEL','POSTDAY','POST DAY','ANTICONCEPCION DE EMERGENCIA','ULIPRISTAL']},
+ {id:'cold',label:'Resfriado / gripe',flow:'resfriado',patterns:[/RESFRIAD/,/GRIPE/,/GRIPAL/,/CATARRO/,/RINOFARING/,/MOQUEO/,/ESTORNUD.*CONGESTION/],terms:['ANTIGRIPAL','RESFRIAD','GRIPAL','PROTECXIN','CLORFENIRAM','DEXTROMETORF','FENILEFRIN']},
+ {id:'dry_cough',label:'Tos seca',flow:'tosseca',patterns:[/TOS SECA/,/TOS SIN FLEMA/,/TOS IRRITAT/],terms:['DEXTROMETORF','LEVODROPROP','CLOPERAST','BUTAMIRAT','ANTITUS','TOS SECA']},
+ {id:'wet_cough',label:'Tos con flema',flow:'tosflema',patterns:[/TOS CON FLEMA/,/TOS PRODUCTIV/,/FLEMA/,/MOCOS.*PECHO/],terms:['GUAIFEN','AMBROXOL','BROMHEX','ACETILCIST','EXPECTOR','MUCOLIT']},
+ {id:'diarrhea',label:'Diarrea / flora intestinal',flow:'gastro',patterns:[/DIARREA/,/FLORA INTESTINAL/,/PROBIOT/],terms:['BACILLUS','ENTEROGERMINA','PROBIOT','REHIDRAT','ELECTROLIT']},
+ {id:'reflux',label:'Acidez / reflujo',flow:'gastro',patterns:[/ACIDEZ/,/REFLUJO/,/ARDOR.*ESTOMAGO/],terms:['OMEPRAZ','PANTOPRAZ','ESOMEPRAZ','FAMOTID','ANTIAC']},
+ {id:'pain',label:'Dolor / fiebre',flow:'dolor',patterns:[/DOLOR/,/FIEBRE/],terms:['PARACETAMOL','ACETAMINOFEN','IBUPROF','DICLOFEN','NAPROX']}
+];
+// Productos consultados que no están en el inventario pero cuyo uso ya fue validado en fuentes externas.
+// Sirven como puente: producto faltante -> uso terapéutico -> alternativas que sí están en stock.
+const EXTERNAL_PRODUCT_HINTS=[
+ {id:'biotos',patterns:[/\bBIOTOS\b/],label:'Tos seca o tos con flema',flows:['tosseca','tosflema'],terms:['HEDERA','PELARGONIUM','EXPECTOR','MUCOLIT','ANTITUS','DEXTROMETORF','GUAIFEN','AMBROXOL','BROMHEX','ACETILCIST'],summary:'Biotos Inmune se usa como coadyuvante para aliviar tos seca y tos productiva/con flema.',source:'Fybeca Ecuador · Biotos Inmune'}
+];
+function externalProductHint(q){let n=norm(q);return EXTERNAL_PRODUCT_HINTS.find(h=>h.patterns.some(rx=>rx.test(n)))||null}
+function detectIntent(q){let n=norm(q);return INTENT_RULES.find(r=>r.patterns.some(rx=>rx.test(n)))||null}
+function semanticCorpus(p){let k=knowledgeFor(p);return norm([p._search,p.name,p.active,p.presentation,p.category,p.lab,k.use,k.char,k.active,(k.cases||[]).join(' '),(k.flows||[]).join(' ')].filter(Boolean).join(' '))}
+function semanticScoreForProduct(p,intent){if(!intent)return 0;let corpus=semanticCorpus(p),score=0;for(const t of intent.terms){if(corpus.includes(norm(t)))score+=6}let k=knowledgeFor(p);if(k.flows&&k.flows.includes(intent.flow))score+=10;if(intent.id==='emergency_contraception'&&/LEVONORGESTREL|ESCAPEL|ULIPRISTAL/.test(corpus))score+=18;return score}
+function queryFlow(q){let intent=detectIntent(q);if(intent)return intent.flow;let n=norm(q);if(/RESFRIAD|GRIPE|GRIPAL|CATARRO|RINOFARING|CONGESTION|MOQUEO|ESTORNUD/.test(n))return'resfriado';if(/TOS SECA|ANTITUS|DEXTROMETORF/.test(n))return'tosseca';if(/TOS CON FLEMA|EXPECTOR|MUCOLIT|GUAIFEN|AMBROXOL|BROMHEX/.test(n))return'tosflema';if(/DIARREA|PROBIOT|ENTEROGERMINA|FLORA INTESTINAL|ACIDEZ|REFLUJO|ESTREN|NAUSE/.test(n))return'gastro';if(/DOLOR|FIEBRE|PARACETAMOL|IBUPROF|DICLOFEN/.test(n))return'dolor';return''}
+function similarProductsForQuery(q){
+ let nq=norm(q),flow=queryFlow(q),hint=externalProductHint(q),pool=catalog.filter(p=>p.stock>0),scores=[];
+ let family=[];
+ if(/ENTEROGERMINA|PROBIOT|FLORA INTESTINAL/.test(nq))family=['BACILLUS','PROBIOT','LACTOBAC','SACCHAROMYC'];
+ else if(/ESCAPEL|LEVONORGESTREL|ANTICONCEPT.*EMERGEN/.test(nq))family=['LEVONORGESTREL','ANTICONCEPT'];
+ else if(/CETIRIZ|LORATADIN|ALERGI|ANTIHISTAM/.test(nq))family=['CETIRIZ','LORATADIN','CLORFENIRAM','ANTIHISTAM'];
+ else if(/OMEPRAZ|PANTOPRAZ|ACIDEZ|REFLUJO/.test(nq))family=['OMEPRAZ','PANTOPRAZ','ESOMEPRAZ','FAMOTID','ANTIAC'];
+ // Si conocemos para qué sirve un producto que NO tenemos, buscamos por todos sus usos conocidos.
+ if(hint){
+   for(const f of hint.flows){
+     for(const p of clinicalCandidates(f,q,'adulto',null).slice(0,8))scores.push({p,score:34+(knowledgeFor(p).flows||[]).includes(f)*8});
+   }
+ }
+ if(flow){for(const p of clinicalCandidates(flow,q,'adulto',null).slice(0,8))scores.push({p,score:20})}
+ for(const p of pool){
+   let hay=p._search||norm([p.name,p.active,p.presentation,p.lab].join(' ')),k=knowledgeFor(p),score=0;
+   if(family.some(t=>hay.includes(t)))score+=12;
+   if(hint){
+     if((k.flows||[]).some(f=>hint.flows.includes(f)))score+=18;
+     for(const t of hint.terms)if(hay.includes(norm(t)))score+=5;
+   }
+   let qterms=nq.split(/\s+/).filter(t=>t.length>=4),pterms=norm(p.name).split(/\s+/);
+   for(const qt of qterms){if(hay.includes(qt))score+=3;else{let ds=pterms.filter(t=>t.length>=4).map(t=>levenshtein(qt,t));let dmin=ds.length?Math.min(...ds):99;if(dmin<=2)score+=1}}
+   if(score>0)scores.push({p,score});
+ }
+ let best=new Map();for(const x of scores){let old=best.get(x.p._i);if(!old||x.score>old.score)best.set(x.p._i,x)}
+ return [...best.values()].sort((a,b)=>b.score-a.score||b.p.stock-a.p.stock).slice(0,6).map(x=>x.p)
+}
+function updateAll(){let units=catalog.reduce((a,x)=>a+(x.stock||0),0),withStock=catalog.filter(x=>x.stock>0).length,low=catalog.filter(x=>x.stock>0&&x.stock<=5).length,val=catalog.reduce((a,x)=>a+(x.stock>0&&x.price>0?x.stock*x.price:0),0);$('sideCount').textContent=catalog.length+' SKU';$('sideStock').textContent=withStock;$('sideLow').textContent=low;$('kpiSku').textContent=catalog.length;$('kpiUnits').textContent=Math.round(units).toLocaleString('es-EC');$('kpiValue').textContent=val?money(val):'—';$('statusDot').className='status-dot'+(catalog.length?' on':'');$('statusText').textContent=catalog.length?'Cargado':'Sin cargar';updateDemandCount();renderResults($('globalSearch').value,{commit:false});renderInventory()}
+function safetyFor(p){
+ let n=norm([p.name,p.active,p.category].join(' '));
+ let antibiotics=['AMOXICIL','AZITROMIC','CIPROFLOX','CEFALEX','CEFTRIAX','CEFUROX','DOXICICL','CLINDAMIC','LEVOFLOX','METRONIDAZ','NITROFURANT','SULFAMETOX','TRIMETOPRIM','CLARITROMIC','PENICIL','AMPICIL'];
+ let nsaids=['IBUPROF','DICLOFEN','NAPROX','KETOROL','MELOXIC','PIROXIC','CELECOX','ETORICOX','DEXKETOPROF','INDOMETAC'];
+ if(antibiotics.some(x=>n.includes(x)))return{type:'rx',label:'Receta',cls:'danger',msg:'Validar receta antes de dispensar.'};
+ if(nsaids.some(x=>n.includes(x)))return{type:'aine',label:'AINE · revisar',cls:'warn',msg:'Revisar riesgo gástrico, renal, anticoagulantes y condiciones del paciente.'};
+ return{type:'general',label:'',cls:'general-hide',msg:''};
+}
+function levenshtein(a,b){a=norm(a);b=norm(b);if(a===b)return 0;if(!a.length)return b.length;if(!b.length)return a.length;let prev=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let cur=[i];for(let j=1;j<=b.length;j++){let cost=a[i-1]===b[j-1]?0:1;cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+cost)}prev=cur}return prev[b.length]}
+function titleCase(x){return String(x||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
+function spellingSuggestion(q){let nq=norm(q).trim();if(!nq||nq.length<4||nq.includes(' '))return null;let seen=new Set(),best=null;for(const p of catalog){for(const raw of [p.name,p.active,p.lab]){for(const tok of String(raw||'').split(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+/)){let t=norm(tok);if(t.length<4||seen.has(t))continue;seen.add(t);let d=levenshtein(nq,t),limit=Math.max(1,Math.floor(Math.max(nq.length,t.length)*.28));if(d<=limit&&(!best||d<best.d||(d===best.d&&t.length<best.term.length)))best={term:t,d}}}}return best?titleCase(best.term):null}
+
+function webSearchUrl(query,embed=false,mode='web'){
+ let extra=mode==='images'?'&tbm=isch':'';
+ let base='https://www.google.com/search?hl=es'+extra+'&q='+encodeURIComponent(query||'');
+ return embed?base+'&igu=1':base;
+}
+function showWebPeek(query,title='Consulta web',mode='web'){
+ query=text(query).trim();if(!query){toast('No hay suficiente información para armar la búsqueda.');return}
+ $('webTitle').textContent=title;$('webQueryText').textContent=query;
+ $('webFrame').src=webSearchUrl(query,true,mode);
+ $('webOpenNew').textContent=mode==='images'?'↗ Abrir imágenes':'↗ Abrir Google';
+ $('webOpenNew').onclick=()=>window.open(webSearchUrl(query,false,mode),'_blank','noopener');
+ $('webModal').classList.add('show');
+}
+function closeWebPeek(){$('webModal').classList.remove('show');setTimeout(()=>{$('webFrame').src='about:blank'},120)}
+function webQueryForProduct(p){return [p?.name,p?.active,p?.lab,p?.presentation,'para que sirve principio activo prospecto Ecuador'].filter(Boolean).join(' ')}
+function webPeekProduct(p){if(!p){toast('No pude identificar el producto.');return}showWebPeek(webQueryForProduct(p),'¿Para qué sirve? · '+(p.name||'Producto'),'web')}
+function webQueryForCase(){
+ let patient=$('patient')?.value||'adulto',age=text($('patientAge')?.value),sym=text($('symptoms')?.value||$('caseText')?.value),dur=$('duration')?.value||'';
+ let who=patient==='nino'?('niño'+(age?' '+age+' años':'')):patient==='adultomayor'?'adulto mayor':patient==='embarazo'?'embarazo lactancia':'adulto';
+ let flowLabel=({resfriado:'resfriado gripe',tosseca:'tos seca',tosflema:'tos con flema',dolor:'dolor',gastro:'síntomas gastrointestinales',antibiotico:'infección antibiótico'})[activeFlow]||'';
+ return [who,sym||flowLabel,dur==='persistente'?'síntomas persistentes':'','manejo sintomático farmacia medicamentos seguridad'].filter(Boolean).join(' ');
+}
+function webPeekCase(){showWebPeek(webQueryForCase(),'Consulta en línea del caso','web')}
+function googleImage(p){
+ if(!p){toast('No pude identificar el producto.');return}
+ let q=[p.name,p.lab,p.presentation].filter(Boolean).join(' ').trim();if(!q){toast('Este producto no tiene datos suficientes para buscar una imagen.');return}
+ showWebPeek(q,'Imágenes · '+(p.name||'Producto'),'images');
+}
+function googleProductInfo(p){webPeekProduct(p)}
+function knowledgeSource(p){let k=knowledgeFor(p);if(k.sourceUrl)window.open(k.sourceUrl,'_blank','noopener');else googleProductInfo(p)}
+function knowledgeFor(p){
+ let n=norm([p.name,p.active,p.category,p.presentation].join(' '));
+ const exact=[
+  {match:'ENTEROGERMINA PLUS',use:'Probiótico con Bacillus clausii que ayuda a restablecer y equilibrar la flora intestinal. También puede utilizarse como apoyo durante tratamientos con antibióticos.',char:'Probiótico de 4000 millones de Bacillus clausii en vial oral.',cases:['Desequilibrio de la flora intestinal','Malestares intestinales','Apoyo durante tratamiento antibiótico'],care:['Si los síntomas intestinales son intensos, persistentes o hay deshidratación, conviene valoración médica.'],avoid:'Consultar ante síntomas intensos o persistentes, fiebre importante, sangre en heces o signos de deshidratación.',effects:'Generalmente bien tolerado; pueden presentarse molestias digestivas en algunas personas.',active:'Bacillus clausii',flows:['gastro'],source:'Enterogermina Ecuador · información oficial 4000 millones',sourceUrl:'https://www.enterogermina.com/es-ec/productos/enterogermina-4000millones'},
+  {match:'ENTEROGERMINA',use:'Probiótico con Bacillus clausii que ayuda a restablecer el equilibrio de la flora intestinal y a aliviar malestares intestinales leves.',char:'Probiótico de Bacillus clausii en vial oral.',cases:['Desequilibrio de la flora intestinal','Malestar intestinal leve','Diarrea leve asociada a desequilibrio intestinal'],care:['Mantener hidratación y vigilar la evolución de los síntomas.'],avoid:'Consultar si hay diarrea intensa o persistente, fiebre alta, sangre en heces o signos de deshidratación.',effects:'Generalmente bien tolerado; pueden presentarse molestias digestivas en algunas personas.',active:'Bacillus clausii',flows:['gastro'],source:'Enterogermina Ecuador · información oficial 2000 millones',sourceUrl:'https://www.enterogermina.com/es-ec/productos/enterogermina-2000millones'},
+  {match:'ESCAPEL',use:'Anticonceptivo de emergencia con levonorgestrel 1,5 mg para reducir el riesgo de embarazo después de una relación sexual sin protección o cuando falla el método anticonceptivo.',char:'Anticoncepción de emergencia con levonorgestrel. Actúa principalmente retrasando o evitando la ovulación; no interrumpe un embarazo ya establecido.',cases:['Relación sexual sin protección','Fallo del preservativo u otro método anticonceptivo','Uso incorrecto u olvido del método habitual'],care:['Es anticoncepción de emergencia, no un método anticonceptivo de uso regular. No protege frente a infecciones de transmisión sexual.'],avoid:'Si ya existe un embarazo establecido, no lo interrumpe. Consultar si hay dudas sobre embarazo, retraso menstrual importante o síntomas preocupantes.',effects:'Puede causar náusea, cansancio y cambios temporales en el sangrado menstrual.',active:'Levonorgestrel 1,5 mg',flows:['anticoncepcion'],source:'OMS · anticoncepción de urgencia con levonorgestrel',sourceUrl:'https://www.who.int/es/news-room/fact-sheets/detail/emergency-contraception'},
+  {match:'PROTECXIN',use:'Alivio sintomático del resfriado común: ayuda con fiebre o malestar, secreción nasal/estornudos y tos seca.',char:'Antigripal combinado con paracetamol, clorfeniramina y dextrometorfano.',cases:['Resfriado común','Rinofaringitis','Tos seca asociada al resfriado'],care:['Evitar duplicar otros productos que también contengan paracetamol, antihistamínicos o antitusivos.'],avoid:'Consultar si hay dificultad respiratoria, síntomas intensos o persistentes, o si se usan otros medicamentos con los mismos componentes.',effects:'Puede causar somnolencia y molestias digestivas en algunas personas.',active:'Paracetamol + clorfeniramina + dextrometorfano',flows:['resfriado','tosseca'],source:'Laboratorios Rocnarf · ficha oficial PROTECXÍN',sourceUrl:'https://www.rocnarf.com/productos/vademecum-rocnarf/linea-respiratoria/protecxin-jarabe-sobres/'},
+  {match:'NOTUSIN EXPECTORANTE',use:'Ayuda a aflojar la flema y facilita la eliminación de secreciones bronquiales.',char:'Expectorante con guaifenesina para tos productiva o con flema.',cases:['Tos con flema','Secreciones bronquiales espesas'],care:['Uso indicado desde los 13 años.'],avoid:'Consultar si la tos dura más de una semana, se repite, hay fiebre, dificultad respiratoria o flema excesiva.',effects:'Puede causar molestias digestivas en algunas personas.',active:'Guaifenesina',minAge:13,ageText:'Desde 13 años',flows:['tosflema'],source:'Notusin Ecuador · información del fabricante',sourceUrl:'https://notusin.com.ec/productos/'},
+  {match:'NOTUSIN INFANTIL',use:'Alivia temporalmente la tos asociada al resfriado y ayuda a aflojar la flema.',char:'Antitusivo + expectorante con dextrometorfano y guaifenesina.',cases:['Tos asociada al resfriado','Tos con secreciones'],care:['Uso indicado desde los 2 años.'],avoid:'Consultar si hay dificultad respiratoria, tos persistente, fiebre importante o empeoramiento.',effects:'Puede causar somnolencia, mareo o molestias digestivas.',active:'Dextrometorfano + guaifenesina',minAge:2,ageText:'Desde 2 años',flows:['tosseca','tosflema'],source:'Notusin Ecuador · información del fabricante',sourceUrl:'https://notusin.com.ec/productos/'},
+  {match:'NOTUSIN 100',use:'Alivia temporalmente la tos seca o irritativa.',char:'Antitusivo con dextrometorfano; no es para tos con flema.',cases:['Tos seca','Tos irritativa'],care:['Uso indicado desde los 6 años.'],avoid:'No usar como opción para tos productiva con flema; consultar si la tos persiste o hay dificultad respiratoria.',effects:'Puede causar somnolencia o mareo en algunas personas.',active:'Dextrometorfano',minAge:6,ageText:'Mayores de 6 años',flows:['tosseca'],source:'Notusin Ecuador · información del fabricante',sourceUrl:'https://notusin.com.ec/productos/'}
+ ];
+ let ex=exact.find(x=>n.includes(x.match));
+ if(ex)return{...ex,status:'web'};
+ const rules=[
+  {k:['EUTIROX','LEVOTIROX'],use:'Hormona tiroidea usada para tratar el hipotiroidismo.',char:'Levotiroxina; reemplaza la hormona tiroidea que el cuerpo necesita.',cases:['Hipotiroidismo'],care:['Es de prescripción y la dosis depende del control médico y de laboratorio.'],avoid:'No usar para bajar de peso.',effects:'Una dosis excesiva puede causar palpitaciones, temblor o nerviosismo.'},
+  {k:['METOCLOPRAMID'],use:'Se usa para náuseas, vómitos y problemas de vaciamiento lento del estómago.',char:'Antiemético y procinético.',cases:['Náuseas y vómitos','Gastroparesia'],care:['Revisar prescripción, duración y otros medicamentos.'],avoid:'Requiere especial precaución por posibles efectos neurológicos.',effects:'Puede causar somnolencia, inquietud o movimientos involuntarios.'},
+  {k:['SYSTANE'],use:'Gotas lubricantes para aliviar resequedad, ardor e irritación ocular.',char:'Lubricante ocular para síntomas de ojo seco.',cases:['Ojo seco','Irritación ocular leve'],care:['No tocar la punta del frasco y revisar compatibilidad con lentes de contacto según la presentación.'],avoid:'Consultar si hay dolor ocular, cambios de visión o irritación persistente.',effects:'Puede producir visión borrosa temporal tras la aplicación.'},
+  {k:['PANITOS','PAÑITOS','TOALLA INTIMA','TOALLA ÍNTIMA','TOALLITAS'],use:'Producto de higiene y limpieza externa.',char:'Artículo de cuidado personal; no es un medicamento.',cases:['Higiene personal'],care:['Usar según indicaciones del fabricante.'],avoid:'Suspender si causa irritación.',effects:'Puede causar irritación en personas sensibles.'},
+  {k:['LEVONORGESTREL'],use:'Se utiliza como anticoncepción de emergencia para reducir el riesgo de embarazo tras una relación sin protección o un fallo anticonceptivo.',char:'Progestágeno utilizado en anticoncepción de emergencia.',cases:['Anticoncepción de emergencia'],care:['No sustituye un método anticonceptivo regular y no protege frente a infecciones de transmisión sexual.'],avoid:'No interrumpe un embarazo establecido.',effects:'Puede causar náusea, cansancio o cambios temporales del sangrado menstrual.'},
+  {k:['ANTIGRIPAL','ANTIFLU','GRIPAL'],use:'Ayuda a aliviar varios síntomas del resfriado o gripe según los principios activos que contenga.',char:'Combinación sintomática; revisar composición para saber si cubre fiebre/dolor, secreción nasal, congestión o tos.',cases:['Resfriado común','Síntomas gripales'],care:['Evitar duplicar principios activos presentes en otros productos, especialmente paracetamol y antihistamínicos.'],avoid:'Consultar ante dificultad respiratoria, síntomas intensos o persistentes.',effects:'Dependen de la combinación; algunos antihistamínicos pueden causar somnolencia.',flows:['resfriado']},
+  {k:['PARACETAMOL','ACETAMINOFEN'],use:'Alivia dolor leve a moderado y ayuda a bajar la fiebre.',char:'Analgésico y antipirético; no es antiinflamatorio.',cases:['Dolor leve','Fiebre'],care:['Evita duplicarlo con otros productos que también contengan paracetamol/acetaminofén.'],avoid:'Revisar especialmente enfermedad hepática o posible sobredosis.',effects:'Puede causar molestias digestivas; la sobredosis puede dañar el hígado.',flows:['dolor']},
+  {k:['IBUPROF'],use:'Ayuda con dolor, inflamación y fiebre cuando el paciente es compatible.',char:'AINE: analgésico, antipirético y antiinflamatorio.',cases:['Dolor inflamatorio','Dolor muscular o dental','Fiebre'],care:['Revisar gastritis/úlcera, riñón, anticoagulantes, hipertensión y embarazo.'],avoid:'Evitar o consultar ante sangrado digestivo, enfermedad renal importante o alergia a AINEs.',effects:'Puede causar irritación gástrica, náusea o acidez.',flows:['dolor']},
+  {k:['DICLOFEN','NAPROX','KETOROL','MELOXIC','PIROXIC','CELECOX','ETORICOX','DEXKETOPROF','INDOMETAC'],use:'Se usa para dolor e inflamación en pacientes seleccionados.',char:'Antiinflamatorio no esteroideo (AINE).',cases:['Dolor inflamatorio','Dolor musculoesquelético'],care:['Revisar estómago, riñón, anticoagulantes, embarazo y otros AINEs.'],avoid:'Evitar o consultar ante úlcera/sangrado, enfermedad renal importante o alergia a AINEs.',effects:'Puede producir irritación digestiva y otros efectos propios de los AINEs.',flows:['dolor']},
+  {k:['LORATADIN'],use:'Alivia síntomas de alergia como estornudos, secreción nasal, picazón y urticaria.',char:'Antihistamínico de segunda generación.',cases:['Rinitis alérgica','Urticaria'],care:['Revisar edad, embarazo/lactancia y otros medicamentos.'],avoid:'Derivar si hay dificultad respiratoria o hinchazón facial.',effects:'Puede causar dolor de cabeza, boca seca o somnolencia.'},
+  {k:['CETIRIZIN','LEVOCETIRIZIN','FEXOFENAD'],use:'Alivia síntomas alérgicos como estornudos, picazón, secreción nasal y urticaria.',char:'Antihistamínico.',cases:['Rinitis alérgica','Urticaria'],care:['Revisar edad y otros medicamentos que causen somnolencia.'],avoid:'Derivar si hay dificultad respiratoria o hinchazón facial.',effects:'Puede causar somnolencia, boca seca o dolor de cabeza.'},
+  {k:['DEXTROMETORF','LEVODROPROP','CLOPERAST','BUTAMIRAT'],use:'Ayuda a aliviar la tos seca o no productiva.',char:'Antitusivo; no es para todos los tipos de tos.',cases:['Tos seca','Tos irritativa'],care:[],avoid:'Consultar si hay dificultad respiratoria, tos persistente o enfermedad respiratoria crónica.',effects:'Puede causar somnolencia, mareo o malestar digestivo según el producto.',flows:['tosseca']},
+  {k:['AMBROXOL','BROMHEX','ACETILCIST','GUAIFEN'],use:'Ayuda a movilizar o expulsar secreciones cuando hay tos con flema.',char:'Expectorante o mucolítico.',cases:['Tos con flema','Secreciones espesas'],care:[],avoid:'Consultar si hay dificultad respiratoria, sangre, fiebre alta persistente o empeoramiento.',effects:'Puede causar náusea o molestias digestivas.',flows:['tosflema']},
+  {k:['OMEPRAZ','ESOMEPRAZ','PANTOPRAZ','LANSOPRAZ'],use:'Reduce el ácido del estómago y se usa en problemas de acidez o reflujo cuando corresponde.',char:'Inhibidor de la bomba de protones (IBP).',cases:['Acidez','Reflujo'],care:['Revisar duración de síntomas y uso frecuente.'],avoid:'Consultar si hay dolor intenso, vómito con sangre, heces negras o pérdida de peso.',effects:'Puede causar dolor de cabeza, náusea, diarrea o estreñimiento.',flows:['gastro']},
+  {k:['FAMOTID'],use:'Reduce la producción de ácido gástrico y puede ayudar en cuadros de acidez.',char:'Antagonista H2.',cases:['Acidez','Reflujo'],care:['Revisar duración y enfermedad renal.'],avoid:'Consultar si hay signos de sangrado digestivo o dolor intenso.',effects:'Puede causar dolor de cabeza, mareo o molestias digestivas.',flows:['gastro']},
+  {k:['LACTULOSA'],use:'Ayuda a tratar el estreñimiento.',char:'Laxante osmótico.',cases:['Estreñimiento'],care:['Revisar duración, hidratación y edad.'],avoid:'Consultar si hay dolor abdominal intenso, vómitos o distensión severa.',effects:'Puede causar gases, cólicos o diarrea.',flows:['gastro']},
+  {k:['SIMETICON'],use:'Ayuda a aliviar gases y distensión abdominal.',char:'Antiflatulento.',cases:['Gases','Distensión'],care:['Confirmar que no exista dolor fuerte o persistente.'],avoid:'Derivar si hay dolor fuerte, vómitos, sangrado o abdomen muy distendido.',effects:'Generalmente bien tolerada.',flows:['gastro']},
+  {k:['SUERO ORAL','REHIDRAT','ELECTROLIT'],use:'Repone agua y electrolitos cuando existe riesgo de deshidratación.',char:'Solución de rehidratación; no corta la diarrea.',cases:['Diarrea','Vómitos','Pérdida de líquidos'],care:['Vigilar signos de deshidratación y capacidad para beber líquidos.'],avoid:'Derivar si hay deshidratación importante, sangre en heces o vómitos persistentes.',effects:'Usado correctamente suele ser bien tolerado.',flows:['gastro']},
+  {k:['AMOXICIL','AZITROMIC','CIPROFLOX','CEFALEX','CEFTRIAX','CEFUROX','DOXICICL','CLINDAMIC','LEVOFLOX','METRONIDAZ','NITROFURANT','SULFAMETOX','TRIMETOPRIM','CLARITROMIC','PENICIL','AMPICIL'],use:'Antimicrobiano para determinadas infecciones bacterianas cuando existe indicación médica.',char:'Antibiótico/antimicrobiano sujeto a prescripción.',cases:['Infecciones bacterianas específicas'],care:['Validar receta, alergias, dosis y duración.'],avoid:'No usar como automedicación ni para gripe/resfriado viral.',effects:'Puede causar molestias gastrointestinales y reacciones alérgicas.',flows:['antibiotico']}
+ ];
+ let r=rules.find(x=>x.k.some(k=>n.includes(k)));
+ if(r)return{...r,status:'local',source:'Referencia por principio activo/clase. Confirmar la etiqueta del producto específico.'};
+ if(n.includes('EXPECTORANTE'))return{status:'generic',use:'Ayuda a movilizar y expulsar flema.',char:'Expectorante.',cases:['Tos con flema'],care:[],avoid:'Consultar si hay dificultad respiratoria, fiebre alta o síntomas persistentes.',effects:'Dependen del principio activo.',flows:['tosflema'],source:'Clasificación por nombre comercial; confirmar composición.'};
+ if(n.includes('ANTITUSIVO')||n.includes('TOS SECA'))return{status:'generic',use:'Ayuda al alivio de la tos seca.',char:'Antitusivo.',cases:['Tos seca'],care:[],avoid:'Consultar si hay dificultad respiratoria o tos persistente.',effects:'Dependen del principio activo.',flows:['tosseca'],source:'Clasificación por nombre comercial; confirmar composición.'};
+ let category=norm(p.category);
+ if(category.includes('VITAM')||category.includes('SUPLEMENT'))return{status:'generic',use:'Suplemento nutricional; su función exacta depende de sus ingredientes.',char:'Revisar composición y dosis del fabricante.',cases:['Uso según composición'],care:['Confirmar ingredientes y población a la que está dirigido.'],avoid:'',effects:'Dependen de sus ingredientes.',source:'Información general por categoría.'};
+ return{status:'pending',use:'Consulta rápida en Info.',char:'Consulta web disponible.',cases:[],care:[],avoid:'',effects:'',source:'Consulta web disponible.'};
+}
+function quickUse(p){return knowledgeFor(p).use}
+function toggleProductDetail(){let e=$('productDetailPanel');if(e)e.classList.toggle('open')}
+
+function clinicalTerms(flow,sym=''){
+ let s=norm(sym);
+ if(flow==='anticoncepcion')return ['LEVONORGESTREL','ESCAPEL','POSTDAY','POST DAY','ULIPRISTAL','ANTICONCEPCION DE EMERGENCIA'];
+ if(flow==='resfriado'||/RESFRIAD|GRIPE|GRIPAL|CATARRO|RINOFARING|CONGESTION NASAL|ESTORNUD|MOQUEO/.test(s))
+   return ['ANTIGRIPAL','RESFRIAD','GRIPAL','PARACETAMOL','ACETAMINOFEN','CLORFENIRAM','DEXTROMETORF','FENILEFRIN','PSEUDOEFEDRIN'];
+ if(flow==='tosseca')return ['ANTITUS','DEXTROMETORF','LEVODROPROP','CLOPERAST','BUTAMIRAT','TOS SECA'];
+ if(flow==='tosflema')return ['EXPECTOR','AMBROXOL','BROMHEX','ACETILCIST','GUAIFEN','MUCOLIT'];
+ if(flow==='dolor')return ['PARACETAMOL','ACETAMINOFEN'];
+ if(flow==='gastro'){
+   if(s.includes('ACIDEZ')||s.includes('REFLUJO'))return ['ANTIAC','OMEPRAZ','FAMOTID'];
+   if(s.includes('DIARREA'))return ['SUERO ORAL','REHIDRAT','ELECTROLIT','PROBIOT','BACILLUS','ENTEROGERMINA'];
+   if(s.includes('ESTREN'))return ['LAXANTE','LACTULOSA','FIBRA'];
+   if(s.includes('NAUSE'))return ['REHIDRAT','ELECTROLIT'];
+   return ['DIGEST','ANTIAC','REHIDRAT'];
+ }
+ return [];
+}
+function clinicalReason(p,flow,sym=''){
+ let hay=p._search||norm([p.name,p.active,p.category,p.presentation].join(' ')),reasons=[],k=knowledgeFor(p),s=norm(sym);
+ if(k.flows&&k.flows.includes(flow))reasons.push('uso compatible');
+ if(flow==='anticoncepcion'&&/LEVONORGESTREL|ESCAPEL|ULIPRISTAL|POSTDAY/.test(hay))reasons.push('anticoncepción de emergencia');
+ if(flow==='resfriado'){
+   if(/ANTIGRIPAL|GRIPAL|RESFRIAD|PROTECXIN/.test(hay))reasons.push('resfriado');
+   if(/PARACETAMOL|ACETAMINOFEN/.test(hay))reasons.push('dolor/fiebre');
+   if(/CLORFENIRAM|LORATADIN|CETIRIZIN/.test(hay))reasons.push('secreción/estornudos');
+   if(/DEXTROMETORF|CLOPERAST|BUTAMIRAT/.test(hay))reasons.push('tos seca');
+   if(/FENILEFRIN|PSEUDOEFEDRIN/.test(hay))reasons.push('congestión');
+ }
+ if(flow==='tosseca'&&/DEXTROMETORF|LEVODROPROP|CLOPERAST|BUTAMIRAT|TOS SECA/.test(hay))reasons.push('tos seca');
+ if(flow==='tosflema'&&/EXPECTOR|AMBROXOL|BROMHEX|ACETILCIST|GUAIFEN|MUCOLIT/.test(hay))reasons.push('tos con flema');
+ if(flow==='dolor'&&/PARACETAMOL|ACETAMINOFEN|IBUPROF|DICLOFEN|NAPROX/.test(hay))reasons.push('dolor');
+ if(flow==='gastro'){
+   if(s.includes('DIARREA')&&/BACILLUS|PROBIOT|ENTEROGERMINA|REHIDRAT|ELECTROLIT/.test(hay))reasons.push('diarrea / flora');
+   if((s.includes('ACIDEZ')||s.includes('REFLUJO'))&&/OMEPRAZ|PANTOPRAZ|ESOMEPRAZ|FAMOTID|ANTIAC/.test(hay))reasons.push('acidez / reflujo');
+   if(s.includes('ESTREN')&&/LACTULOSA|LAXANTE|FIBRA/.test(hay))reasons.push('estreñimiento');
+ }
+ return [...new Set(reasons)].slice(0,3).join(' · ');
+}
+
+function ageEligibility(p,age){
+ let k=knowledgeFor(p);
+ if(age===null||age===undefined||age==='')return{status:'none',text:''};
+ age=Number(age);
+ if(!Number.isFinite(age))return{status:'none',text:''};
+ if(k.minAge===undefined||k.minAge===null)return{status:'unknown',text:`Edad ${age}: sin rango validado para esta presentación`};
+ if(age<Number(k.minAge))return{status:'blocked',text:`No corresponde para ${age} años · uso desde ${k.ageText||k.minAge+' años'}`};
+ if(k.maxAge!==undefined&&k.maxAge!==null&&age>Number(k.maxAge))return{status:'blocked',text:`No corresponde para ${age} años · uso hasta ${k.maxAge} años`};
+ return{status:'ok',text:`Edad de referencia, por confirmar: ${age} años`};
+}
+function clinicalCandidates(flow,sym,patient,age){
+ let terms=clinicalTerms(flow,sym);if(flow==='antibiotico')return[];
+ let rows=catalog.filter(p=>p.stock>0).map(p=>{
+   let hay=p._search||norm([p.name,p.active,p.category,p.presentation].join(' ')),k=knowledgeFor(p),score=0;
+   for(const t of terms)if(hay.includes(norm(t)))score+=3;
+   if(flow==='resfriado'&&(/ANTIGRIPAL|RESFRIAD|GRIPAL/.test(hay)))score+=7;
+   if(flow==='resfriado'&&/CLORFENIRAM/.test(hay)&&/DEXTROMETORF/.test(hay))score+=6;
+   if(k.flows&&k.flows.includes(flow))score+=8;
+   if(k.flows&&k.flows.length&&!k.flows.includes(flow))score-=5;
+   if(patient==='nino'){
+     if(age!==null){
+       let av=ageEligibility(p,age);
+       if(av.status!=='ok')return{p,score:-999,k};
+       score+=5;
+     }else if(k.minAge===undefined||k.minAge===null){
+       return{p,score:-999,k};
+     }
+     if(/JARABE|SUSPENSION|SUSP|GOTAS|PEDIATR|INFANTIL/.test(hay))score+=2;
+     if(/ADULTO|FORTE/.test(hay))score-=3;
+   }
+   let sf=safetyFor(p);if(sf.type==='rx')score-=8;if(flow!=='dolor'&&sf.type==='aine')score-=3;
+   if(k.status==='pending')score-=1;
+   return{p,score,k};
+ }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||b.p.stock-a.p.stock).slice(0,6).map(x=>x.p);
+ return rows;
+}
+function medicineOptionsHTML(rows,patient,age){
+ if(!rows.length){
+   if(patient==='nino'&&age!==null)return `<p class="footnote"><b>No encontré en tu stock una presentación con edad validada para ${age} años y este síntoma.</b></p>`;
+   return '<p class="footnote"><b>No encontré una coincidencia suficiente todavía.</b> Agrega síntomas como tos, congestión, fiebre, secreción nasal o dolor para afinar el cruce con tu stock.</p>';
+ }
+ return `<div class="med-options">${rows.map(p=>{let s=safetyFor(p),k=knowledgeFor(p),av=ageEligibility(p,age),ageChip='',why=clinicalReason(p,activeFlow,$('symptoms')?.value||'');if(patient==='nino'&&age!==null&&av.status==='ok')ageChip=`<span class="chip age-ok">✓ ${esc(av.text)}</span>`;return `<div class="med-option"><div class="med-option-top"><div><b>${esc(p.name)}</b><div class="clinical-tag">Cantidad en archivo ${p.stock}${p.active?' · '+esc(p.active):''}${p.presentation?' · '+esc(p.presentation):''}</div></div><div class="price">${money(p.price)}</div></div><div class="product-use">${esc(compactUse(k.use))}</div><span class="chip warn">Referencia orientativa · validar ficha exacta</span>${why?`<div class="match-why"><b>Coincide:</b> ${esc(why)}</div>`:''}<div class="meta">${ageChip}${s.type!=='general'?`<span class="chip ${s.cls}">${esc(s.label)}</span>`:''}</div><div class="med-actions"><button class="btn-mini btn-web" onclick="webPeekProduct(productByIndex(${p._i}))">🌐 Info</button><button class="btn-mini image-btn" onclick="googleImage(productByIndex(${p._i}))">🖼 Imagen</button></div></div>`}).join('')}</div>`
+}
+
+const CASE_REVIEW_DATE='08/10/2026';
+const CASE_SOURCES=[
+ ['ARCSA · Registros y condición OTC','https://www.controlsanitario.gob.ec/base-de-datos/'],
+ ['ECU 911 · Atención de emergencias','https://www.ecu911.gob.ec/gestion-de-la-atencion-de-emergencias/'],
+ ['NHS · Dolor torácico','https://www.nhs.uk/conditions/chest-pain/'],
+ ['NICE · Fiebre en menores de 5 años','https://www.nice.org.uk/guidance/NG143/chapter/recommendations'],
+ ['CDC · Uso de antibióticos','https://www.cdc.gov/antibiotic-use/hcp/clinical-care/adult-outpatient.html'],
+ ['OMS · Anticoncepción de emergencia','https://www.who.int/news-room/fact-sheets/detail/emergency-contraception'],
+ ['NHS · Anticoagulantes y alimentación','https://www.nhs.uk/medicines/anticoagulants/considerations/']
+];
+const CASE_TOPICS=[
+ {id:'cardiovascular',title:'Consulta cardiovascular',re:/PRESION|HIPERTENS|PALPITACION|DOLOR (?:EN EL |DE |EN )?PECHO|DOLOR TORACICO/,modules:'10 (pp. 2–5), 16 (pp. 7–8)',questions:['¿Qué molestia presenta ahora y desde cuándo?','¿Qué tratamiento habitual tiene indicado? ¿Lo ha cambiado?'],note:'No modificar el tratamiento habitual ni atribuir síntomas a la presión sin valoración.'},
+ {id:'interacciones',title:'Revisión de medicamentos',re:/MEZCLAR|COMBINAR|JUNTOS|INTERACCION|WARFARINA|ANTICOAGUL|SEDANTE|VARIOS MEDICAMENTOS/,modules:'4 (pp. 3–5), 17 (pp. 4–8)',questions:['¿Cuáles son todos los nombres, concentraciones y horarios?','¿Usa suplementos, productos naturales o alcohol?'],note:'La lista del curso es parcial. No encontrar una interacción no demuestra que una combinación sea segura.'},
+ {id:'anticoncepcion',title:'Salud sexual y reproductiva',re:/ANTICONCEP|RELACION SIN PROTECCION|EVITAR EMBARAZO|CONDON|PRESERVATIVO|FLUJO VAGINAL|LESION GENITAL|PICAZON VAGINAL/,modules:'14 (pp. 3–5)',questions:['¿Busca prevención o consulta por una molestia?','Si hubo una relación sin protección, ¿cuántas horas han transcurrido?','¿Hay dolor, sangrado anormal o lesiones?'],note:'Facilitar consulta profesional oportuna y confidencial. No descartar opciones solo por superar 72 horas; dependen del método y deben verificarse en Ecuador.'},
+ {id:'urinario',title:'Molestias urinarias',re:/ORINAR|ORINA|URINARI|CISTITIS|RINON|RENAL/,modules:'12 (pp. 3–6)',questions:['¿Hay ardor, dificultad para orinar o cambios en la orina?','¿Hay fiebre, dolor lumbar, embarazo o enfermedad renal?'],note:'No clasificar como irritación o infección por intensidad. La selección de antibióticos requiere evaluación profesional.'},
+ {id:'piel',title:'Piel',re:/PIEL|PICAZON|RONCHA|ERUPCION|CREMA|HONGO|LESION|DERMATIT|HERIDA/,modules:'13 (pp. 3–6)',questions:['¿Dónde está la lesión, qué extensión tiene y cómo ha cambiado?','¿Qué productos se ha aplicado? ¿Hay dolor, fiebre o secreción?'],note:'No convertir picazón, bordes o pus en un diagnóstico. No recomendar corticoides sobre una lesión sin identificar.'},
+ {id:'gastro',title:'Molestias digestivas',re:/DIARREA|ACIDEZ|REFLUJO|NAUSE|ESTREN|VOMIT|DOLOR ABDOM|ESTOMAGO/,modules:'8 (pp. 2–4), 15 (pp. 4–5)',questions:['¿Predomina diarrea, vómito, acidez, estreñimiento o dolor?','¿Puede beber y retener líquidos? ¿Ha disminuido la orina?','¿Hay sangre, heces negras o dolor intenso?'],note:'No asumir que un cuadro reciente es leve. La respuesta depende del contexto y las señales de alarma.'},
+ {id:'nervioso',title:'Sueño y sistema nervioso',re:/INSOMNIO|DORMIR|ANSIEDAD|NERVIOS|DEPRESION|CLONAZEPAM|ALPRAZOLAM/,modules:'9 (pp. 2–5), 16 (pp. 4–5)',questions:['¿Desde cuándo ocurre y cómo afecta las actividades?','¿Qué medicamentos utiliza y quién los indicó?'],note:'No copiar tratamientos ajenos ni proponer sedantes por síntomas. Consultar al profesional responsable.'},
+ {id:'antibiotico',title:'Solicitud de antibiótico',re:/ANTIBIOT|AMOXICIL|AZITROMIC|CIPROFLOX|CEFALEX|NITROFURANT|CEFTRIAX/,modules:'6 (pp. 8–11)',questions:['¿Trae la receta para revisar la indicación exacta?','¿Conoce alergias o reacciones previas a medicamentos?'],note:'No elegir antibióticos por síntomas ni por color de secreciones. Verificar receta y requisitos aplicables con el farmacéutico.'},
+ {id:'respiratorio',title:'Tos y molestias respiratorias',re:/TOS|FLEMA|RESFRIAD|GRIPE|GRIPAL|CONGESTION|GARGANTA|MOCO|ESTORNUD/,modules:'7 (pp. 2–5), 15 (pp. 4–7)',questions:['¿Cómo es la tos y desde cuándo comenzó?','¿Hay fiebre medida, dificultad respiratoria, dolor de pecho o sangre?','¿Usa antigripales u otros productos con varios ingredientes?'],note:'No asociar automáticamente tos seca con antitusivos ni flema con expectorantes. Revisar el caso y cada formulación.'},
+ {id:'dolor',title:'Dolor',re:/DOLOR|DUELE|DOLIENDO|CEFALEA|MIGRANA/,modules:'5 (pp. 2–4)',questions:['¿Dónde duele, qué intensidad tiene y comenzó repentinamente?','¿Qué tomó ya, cuánto y cuándo?','¿Tiene antecedentes gástricos, renales o tratamiento anticoagulante?'],note:'No elegir por potencia ni combinar analgésicos sin revisar los componentes y antecedentes.'}
+];
+function detectCaseTopics(value){const n=norm(value);return CASE_TOPICS.filter(x=>x.re.test(n))}
+// Bounded lexical aid only. Confirmation is mandatory; ambiguous statements never authorize medicine selection.
+function mentionStatus(value,phrases){let positive=false,negative=false;const chunks=String(value).split(/[.;!?\n]|\bpero\b|\bahora\b/i);for(const c of chunks){const t=norm(c);for(const p of phrases){const target=norm(p);let start=0,at;while((at=t.indexOf(target,start))>=0){const before=t.slice(Math.max(0,at-60),at);const neg=/\b(SIN|NIEGA|NO(?: TIENE| PRESENTA| REFIERE| HAY| HA TENIDO| SIENTE)?)\s+(?:(?:FIEBRE|TOS|DOLOR|NI|Y|ACTUALMENTE)\s+){0,4}$/.test(before);if(neg)negative=true;else positive=true;start=at+target.length}}}return positive?'positive':negative?'negative':'unknown'}
+const CASE_ALARMS=[
+ {label:'Dificultad respiratoria',phrases:['dificultad para respirar','falta de aire','no puede respirar','no respira','le cuesta respirar','labios azules']},
+ {label:'Dolor torácico',phrases:['dolor en el pecho','dolor de pecho','dolor torácico','presión en el pecho','le duele el pecho']},
+ {label:'Alteración de conciencia o convulsión',phrases:['desmayo','desmayado','confusión','inconsciente','no responde','convulsión','convulsiones']},
+ {label:'Hinchazón de labios o lengua',phrases:['hinchazón de labios','labios hinchados','hinchazón de lengua','lengua hinchada']},
+ {label:'Posible sangrado digestivo o respiratorio',phrases:['vómito con sangre','vomita sangre','tos con sangre','heces negras','sangre en heces']},
+ {label:'Dolor intenso referido',phrases:['dolor intenso','dolor muy fuerte','dolor insoportable']},
+ {label:'Posible deshidratación importante',phrases:['no puede beber','no retiene líquidos','no orina','no ha orinado']},
+ {label:'Riesgo de autolesión comunicado',phrases:['quiere suicidarse','quiere hacerse daño','quiero suicidarme','quiero hacerme daño']}
+];
+function parseCase(value){
+ const n=norm(value),ages=[...String(value).matchAll(/\b(\d{1,3}(?:[.,]\d+)?)\s*(años?|anos?|mes(?:es)?)\b/gi)];
+ // Months only count as age when attached to a person, not a symptom duration.
+ const ageCandidates=ages.filter(m=>/a[nñ]o/i.test(m[2])?!/HACE\s*$|DESDE\s*$|POR\s*$/.test(norm(value.slice(Math.max(0,m.index-20),m.index))):/(BEBE|NINO|NINA|LACTANTE|EDAD|PACIENTE)(?: DE)?\s*$/.test(norm(value.slice(Math.max(0,m.index-30),m.index))));
+ const distinct=[...new Set(ageCandidates.map(m=>Number(m[1].replace(',','.'))*(/^mes/i.test(m[2])?1/12:1)))];
+ const age=distinct.length===1&&distinct[0]<=120?distinct[0]:null;
+ let patient=age!==null?(age<18?'nino':age>=65?'adultomayor':'adulto'):/\b(NINO|NINA|BEBE|LACTANTE)\b/.test(n)?'nino':/ADULTO MAYOR|ANCIANO|ANCIANA/.test(n)?'adultomayor':/\bADULTO\b|\bADULTA\b/.test(n)?'adulto':'';
+ let duration='';const d=n.match(/(?:DESDE HACE|HACE|DESDE|DURANTE|LLEVA) (\d+|UN|UNA|DOS|TRES|CUATRO|CINCO|SEIS|SIETE) (HORA|DIA|SEMANA|MES)/);
+ if(d){let amount=Number(d[1])||({UN:1,UNA:1,DOS:2,TRES:3,CUATRO:4,CINCO:5,SEIS:6,SIETE:7}[d[1]]);duration=/SEMANA|MES/.test(d[2])?'cronico':d[2]==='HORA'||amount<=1?'hoy':amount<=3?'2-3':'persistente'}else if(/\bHOY\b|\bAYER\b/.test(n))duration='hoy';else if(/RECURRENTE|CRONICO|CRONICA/.test(n))duration='cronico';
+ const alarms=CASE_ALARMS.filter(a=>mentionStatus(value,a.phrases)==='positive').map(a=>a.label);
+ if(age!==null&&age<.25&&(mentionStatus(value,['fiebre'])==='positive'||/(?:TEMPERATURA|FIEBRE|CON)\s*(?:DE\s*)?(?:3[89]|4\d)(?:[.,]\d+)?\s*(?:C|GRADOS|°)/i.test(value)))alarms.push('Menor de 3 meses con fiebre referida');
+ return {age,patient,duration,topics:detectCaseTopics(value),alarms,ambiguousAge:distinct.length>1};
+}
+let caseParsed=null,lastAnalyzedText='';
+function interpretFreeCase(){
+ const v=$('caseText').value.trim();if(!v){toast('Escribe primero el caso');return}
+ if(v!==lastAnalyzedText){['otherMeds','allergies','conditions','alarmCheck'].forEach(id=>$(id).value='');document.querySelectorAll('.redflag').forEach(x=>x.checked=false)}lastAnalyzedText=v;caseParsed=parseCase(v);$('patient').value=caseParsed.patient;$('patientAge').value=caseParsed.age===null?'':Math.round(caseParsed.age*10000)/10000;$('duration').value=caseParsed.duration;$('symptoms').value=v;
+ // New analysis does not infer absence of allergies, disease or other treatments.
+ $('caseSummary').textContent=`Datos sugeridos para confirmar: ${caseParsed.age===null?'edad no identificada':caseParsed.age<1?Math.round(caseParsed.age*12)+' meses':caseParsed.age+' años'} · ${caseParsed.duration?'duración identificada':'duración por preguntar'}. ${caseParsed.ambiguousAge?'Se mencionan varias edades: separa los casos.':''}`;
+ setFlow(caseParsed.topics[0]?.id||'otro');caseHasRun=true;evaluate();
+}
+function evaluate(){
+ const raw=[$('symptoms').value,$('otherMeds').value,$('conditions').value].join('. '),parsed=parseCase(raw),age=$('patientAge').value===''?null:Number($('patientAge').value),manual=[...document.querySelectorAll('.redflag:checked')].map(x=>x.parentElement.textContent.trim());
+ const alarms=[...new Set([...parsed.alarms,...manual])];
+ if(age!==null&&age<.25&&mentionStatus(raw,['fiebre'])==='positive'&&!alarms.includes('Menor de 3 meses con fiebre referida'))alarms.push('Menor de 3 meses con fiebre referida');
+ const topics=parsed.topics.length?parsed.topics:CASE_TOPICS.filter(t=>t.id===activeFlow);const needed=[];
+ if(!$('patient').value||age===null||!Number.isFinite(age)||age<0||age>120)needed.push('Confirma para quién es y su edad exacta.');
+ if(!$('duration').value)needed.push('Pregunta desde cuándo ocurre.');
+ if(!$('symptoms').value.trim())needed.push('Describe la molestia o solicitud.');
+ if(!$('otherMeds').value.trim())needed.push('Pregunta qué medicamentos y suplementos utiliza; registra si no utiliza ninguno.');
+ if(!$('allergies').value.trim())needed.push('Pregunta por alergias o reacciones previas.');
+ if(!$('conditions').value.trim())needed.push('Confirma antecedentes y embarazo/lactancia cuando corresponda.');
+ if(!$('alarmCheck').value)needed.push('Pregunta y confirma si hay señales de alarma.');
+ if(parsed.ambiguousAge)needed.unshift('Hay varias edades en el texto. Atiende un solo caso por análisis.');
+ let title=alarms.length?'Priorizar atención médica':$('alarmCheck').value==='yes'?'Aclarar la alerta con el profesional':needed.length?'Faltan datos para orientar':'Caso preparado para revisión farmacéutica';
+ const points=topics.flatMap(t=>t.questions),unique=[...new Set(points)].slice(0,6);
+ const urgent=alarms.length>0||$('alarmCheck').value==='yes';
+ const risk=age!==null&&(age<18||age>=65)||$('patient').value==='embarazo';
+ const sourceRefs=topics.map(t=>`Módulo ${t.modules}`).join(' · ')||'Módulos 1 (pp. 5–6), 4 (pp. 3–5) y 17 (pp. 7–8)';
+ $('decision').classList.add('decision-compact');
+ $('decision').innerHTML=`<span class="level ${urgent?'red':'yellow'}">${urgent?'Atención prioritaria':needed.length?'Completar información':'Revisión profesional'}</span><h3>${title}</h3>${topics.map(t=>`<span class="case-topic">${esc(t.title)}</span>`).join('')}${urgent?`<div class="case-alert"><b>Señales para confirmar de inmediato</b><ul>${(alarms.length?alarms:['El colaborador indicó una señal de alarma o duda.']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p>No demores la valoración por buscar un producto. Ante una emergencia activa, llama al <a href="tel:911">911</a> y sigue sus indicaciones.</p></div>`:''}${needed.length?`<div class="case-section"><h4>Información pendiente</h4><ul class="case-checklist">${needed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${!urgent?`<div class="case-section"><h4>Preguntas para este caso</h4><ul class="case-checklist">${(unique.length?unique:['¿Cuál es la necesidad principal?','¿Qué ha intentado y qué resultado obtuvo?']).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${risk?'<p><b>Edad o situación de atención especial:</b> consultar al farmacéutico antes de orientar sobre productos.</p>':''}</div><div class="case-section"><h4>Criterio de atención</h4>${topics.map(t=>`<p>${esc(t.note)}</p>`).join('')||'<p>La solicitud no coincide con un caso previsto. Consulta al farmacéutico.</p>'}<p><b>No hay un protocolo de selección de medicamentos aprobado para este caso.</b> Completar las preguntas no equivale a autorizar un tratamiento.</p></div><div class="case-section"><h4>Producto solicitado o indicado</h4><p class="footnote">Busca por nombre o código después de la revisión profesional. Se mostrarán datos comerciales, no una recomendación por síntomas.</p><label for="caseProduct">Nombre o código exacto</label><input id="caseProduct" placeholder="Ej.: nombre de la receta o código"><button class="btn btn-line" style="margin-top:8px" onclick="lookupCaseProduct()">Consultar en mi inventario</button><div id="caseProductResults"></div></div>`:''}<div class="case-section"><h4>Cómo explicarlo al cliente</h4><p>${urgent?'“Por lo que nos comenta, la prioridad es que reciba valoración médica.”':needed.length?'“Antes de revisar opciones, necesito confirmar algunos datos para orientarle con seguridad.”':'“Ya tenemos los datos del caso. El farmacéutico revisará qué opciones corresponden.”'}</p><button class="btn btn-line" onclick="copyCaseSummary()">Copiar resumen para el farmacéutico</button><p id="copyStatus" class="footnote" role="status"></p></div><details class="case-section"><summary>Fuentes y alcance</summary><p class="case-source">PHARMEC / PuntoFarma: ${esc(sourceRefs)}. Módulos 2 y 3: contexto conceptual, sin selección ni ajuste de dosis. Adaptación ${CASE_REVIEW_DATE}; pendiente de validación profesional.</p>${CASE_SOURCES.map(([label,url])=>`<p class="case-source"><a target="_blank" rel="noopener noreferrer" href="${url}">${label}</a></p>`).join('')}<p class="case-source">Análisis limitado por reglas. Puede omitir señales. No descarta enfermedades ni verifica todas las interacciones. Los casos no se guardan ni se envían a un servicio de IA.</p></details>`;
+}
+function lookupCaseProduct(){const q=norm($('caseProduct').value);const box=$('caseProductResults');if(q.length<3){box.textContent='Escribe al menos 3 caracteres.';return}const rows=catalog.filter(p=>norm(p.code)===q||norm(p.name).includes(q)||norm(p.active)===q).slice(0,6);box.innerHTML=rows.length?rows.map(p=>`<div class="source-card"><b>${esc(p.name)}</b><p>Presentación: ${esc(p.presentation||'Dato no disponible')}<br>Cantidad del archivo: ${p.stock} · Precio del archivo: ${money(p.price)}<br>Unidad de venta y disponibilidad física: confirmar.</p><span class="chip warn">Ficha farmacéutica y dispensación: requiere validación</span></div>`).join(''):'No se encontraron coincidencias por nombre o código en el catálogo cargado.'}
+async function copyCaseSummary(){const out=['RESUMEN PARA REVISIÓN FARMACÉUTICA',$('symptoms').value,'Edad: '+($('patientAge').value||'No indicada'),'Duración: '+($('duration').selectedOptions[0]?.textContent||'Por confirmar'),'Otros tratamientos: '+($('otherMeds').value||'No indicado'),'Alergias: '+($('allergies').value||'No indicado'),'Antecedentes: '+($('conditions').value||'No indicado'),'Revisar señales de alarma y validar antes de dispensar.'].join('\n');try{await navigator.clipboard.writeText(out);$('copyStatus').textContent='Resumen copiado. No se ha enviado a nadie.'}catch(e){$('copyStatus').innerHTML='<label>Selecciona y copia el resumen<textarea readonly id="copyFallback"></textarea></label>';$('copyFallback').value=out}}
+function resetWizard(){caseHasRun=false;caseParsed=null;lastAnalyzedText='';['patient','patientAge','duration','symptoms','otherMeds','caseText','allergies','conditions','alarmCheck'].forEach(id=>$(id).value='');$('caseSummary').textContent='';document.querySelectorAll('.redflag').forEach(x=>x.checked=false);setFlow('');$('decision').innerHTML='<span class="level yellow">Pendiente</span><h3>Describe un nuevo caso</h3><p>No se guardan datos del cliente.</p>'}
+const CASE_EXAMPLES=[['Tos pediátrica','Niño de 8 años con tos seca desde hace dos días, sin fiebre.'],['Medicamentos','Adulto de 70 años usa warfarina y pregunta si puede combinarla con diclofenaco.'],['Piel','Adulto de 35 años con picazón en la piel desde hace cuatro días.'],['Alerta','Adulto de 50 años con dolor en el pecho y falta de aire desde hace una hora.'],['Bebé','Bebé de 2 meses con fiebre desde hoy.'],['Salud sexual','Adulta de 25 años pregunta por anticoncepción después de una relación sin protección hace 80 horas.']];
+function recordInventoryImport(){try{localStorage.setItem('pf_inventory_meta_v313',JSON.stringify({name:window.pendingInventoryName||'Archivo cargado',loadedAt:new Date().toISOString()}));renderInventoryStamp()}catch(e){toast('No fue posible guardar la fecha de carga')}}
+function renderInventoryStamp(){try{const meta=JSON.parse(localStorage.getItem('pf_inventory_meta_v313')||'null');if(meta)$('inventoryStamp').textContent=`Archivo ${meta.name} · cargado ${new Date(meta.loadedAt).toLocaleString('es-EC')} · No es stock en tiempo real.`}catch(e){}}
+
+function productByIndex(i){
+ const n=Number(i);
+ if(!Number.isFinite(n)) return null;
+ return catalog.find(p=>Number(p._i)===n) || catalog[n] || null;
+}
+
+function searchCatalog(q){
+ let nq=norm(q).trim();
+ if(!nq)return catalog.slice(0,20);
+ let terms=nq.split(/\s+/).filter(Boolean),intent=detectIntent(q);
+ return catalog.map(p=>{
+   let hay=p._search||norm([p.code,p.name,p.active,p.presentation,p.category,p.lab].join(' '));
+   let lexical=0,all=true;
+   for(const t of terms){if(hay.includes(t))lexical+=1;else all=false}
+   let pn=norm(p.name),pc=norm(p.code),semantic=semanticScoreForProduct(p,intent),score=0;
+   if(all&&lexical){score+=lexical;if(pn.startsWith(nq))score+=2;if(pc===nq)score+=4;if(pn===nq)score+=5}
+   // Si hay intención clara, el producto puede coincidir aunque la frase no aparezca literal en la caja.
+   if(intent&&semantic>0)score+=30+semantic;
+   return {p,score};
+ }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||b.p.stock-a.p.stock||a.p.name.localeCompare(b.p.name)).slice(0,50).map(x=>x.p);
+}
+
+function compactUse(v){let t=text(v).replace(/^Alivio sintomático de /i,'').replace(/^Ayuda al alivio de /i,'').replace(/^Ayuda a /i,'').trim();return t||'Consultar uso'}
+function productCardHTML(p){let sf=safetyFor(p),k=knowledgeFor(p);return `<div class="product no-click"><div class="product-top"><div><h4>${esc(p.name||'Sin descripción')}</h4></div><div class="price">${money(p.price)}</div></div><div class="product-use">${esc(compactUse(k.use))}</div><span class="chip warn">Referencia orientativa · validar ficha exacta</span><div class="meta">${p.stock||p.stock===0?`<span class="chip ${p.stock>5?'ok':p.stock>0?'warn':'danger'}">Cantidad en archivo ${p.stock}</span>`:''}${k.minAge!==undefined&&k.minAge!==null?`<span class="chip age-ok">${esc(k.ageText||('Desde '+k.minAge+' años'))}</span>`:''}${sf.type!=='general'?`<span class="chip ${sf.cls}">${esc(sf.label)}</span>`:''}</div><div class="med-actions"><button class="btn-mini btn-web" data-web="${p._i}">🌐 Info</button><button class="btn-mini image-btn image-search" data-img="${p._i}">🖼 Imagen</button></div></div>`}
+function wireProductActions(root){root.querySelectorAll('.image-search').forEach(b=>b.onclick=e=>{e.stopPropagation();googleImage(productByIndex(Number(b.dataset.img)))});root.querySelectorAll('[data-web]').forEach(b=>b.onclick=e=>{e.stopPropagation();webPeekProduct(productByIndex(Number(b.dataset.web)))})}
+function renderResults(q='',opts={}){
+ if(text(q)&&detectCaseTopics(q).length&&!catalog.some(p=>norm(p.name)===norm(q)||norm(p.code)===norm(q))){setPage('orientacion');$('caseText').value=q;interpretFreeCase();return}
+
+ let commit=!!opts.commit,box=$('results'),sb=$('suggestionBar');sb.classList.remove('show');sb.innerHTML='';
+ if(!catalog.length){box.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ico">📦</div><b>Aún no hay inventario cargado</b><p>Carga tu Excel desde Inventario.</p><button class="btn btn-green" onclick="document.getElementById('fileInput').click()">Cargar Excel</button></div>`;$('resultLabel').textContent='Carga tu inventario para comenzar';return}
+ q=text(q).trim();let rows=searchCatalog(q),available=rows.filter(p=>p.stock>0);$('resultLabel').textContent=q?`${available.length} disponibles`:`Mostrando ${Math.min(20,catalog.length)} de ${catalog.length}`;
+ if(!q){box.innerHTML=rows.map(productCardHTML).join('');wireProductActions(box);return}
+ if(!rows.length){let sug=spellingSuggestion(q);if(sug&&norm(sug)!==norm(q)){sb.innerHTML=`<b>Tal vez quisiste decir:</b> <button id="useSuggestion">${esc(sug)}</button>`;sb.classList.add('show');setTimeout(()=>{let b=$('useSuggestion');if(b)b.onclick=()=>{$('globalSearch').value=sug;renderResults(sug,{commit:true});$('globalSearch').focus()}},0)}}
+ if(available.length){box.innerHTML=available.map(productCardHTML).join('');wireProductActions(box);return}
+ let demand=commit?registerDemand(q,rows.length?'Sin stock':'No está en catálogo'):null,sim=similarProductsForQuery(q),hint=externalProductHint(q);
+ let exactNote=rows.length?`El producto aparece en tu catálogo, pero figura sin cantidad disponible en el archivo.`:`No encontré “${esc(q)}” disponible en tu inventario.`;
+ let hintBox=hint?`<div class="intent-hint"><b>Uso:</b> ${esc(hint.label)}</div>`:'';
+ box.innerHTML=`<div class="notfound-card"><h3>${esc(q)} · No disponible</h3>${demand?`<span class="demand-ok">Solicitado ×${demand.count}</span>`:''}${hintBox}<div style="margin-top:8px"><button class="btn-mini btn-web" id="webMissing">🌐 Info</button></div></div>${sim.length?`<div class="similar-title"><b>Productos relacionados · no equivalentes</b></div>${sim.map(productCardHTML).join('')}`:`<div class="empty" style="grid-column:1/-1;padding:18px">Sin alternativas claras en stock.</div>`}`;
+ let wm=$('webMissing');if(wm)wm.onclick=()=>showWebPeek(q+' para que sirve principio activo prospecto Ecuador','¿Para qué sirve? · '+q,'web');wireProductActions(box)
+}
+function openProduct(i){
+ let p=productByIndex(i);if(!p)return;let s=safetyFor(p),alts=findAlternatives(p).slice(0,4),k=knowledgeFor(p);
+ let currentAge=Number($('patientAge')?.value||0)||null,av=ageEligibility(p,currentAge);
+ let ageContext=currentAge?(av.status==='ok'?`<div class="brief-note"><b>✓ Para ${currentAge} años:</b> rango orientativo pendiente de validación de esta presentación.</div>`:av.status==='blocked'?`<div class="brief-note warn"><b>Para ${currentAge} años:</b> ${esc(av.text)}</div>`:`<div class="brief-note"><b>Para ${currentAge} años:</b> esta presentación todavía no tiene un rango de edad validado en la ficha. No la usaré como sugerencia automática.</div>`):'';
+ let mainActive=k.active||p.active||'No disponible',keyCare=(k.care&&k.care[0])?k.care[0]:'';
+ $('drawer').innerHTML=`<div class="drawer-head"><div><div class="code">${esc(p.code)}</div><h2>${esc(p.name)}</h2></div><button class="close" onclick="closeDrawer()">×</button></div><div class="meta">${p.stock||p.stock===0?`<span class="chip ${p.stock>0?'ok':'danger'}">Cantidad en archivo ${p.stock}</span>`:''}${k.minAge!==undefined&&k.minAge!==null?`<span class="chip age-ok">${esc(k.ageText||('Desde '+k.minAge+' años'))}</span>`:''}${s.type!=='general'?`<span class="chip ${s.cls}">${esc(s.label)}</span>`:''}</div>${ageContext}<div class="use-card ${k.status==='pending'?'pending-use':''}"><h3>¿Para qué sirve?</h3><p>${esc(k.use)}</p>${k.status==='pending'?`<div class="web-inline-note">Abre “Ver para qué sirve” y revisa la búsqueda sin salir de PuntoFARMA.</div>`:''}</div>${keyCare?`<div class="brief-note ${s.type==='rx'||s.type==='aine'?'warn':''}"><b>Ten en cuenta:</b> ${esc(keyCare)}</div>`:''}<div class="quick-facts"><div class="quick-fact"><small>Precio</small><b>${money(p.price)}</b></div><div class="quick-fact"><small>Principio activo</small><b>${esc(mainActive)}</b></div><div class="quick-fact"><small>Presentación</small><b>${esc(p.presentation||'No disponible')}</b></div><div class="quick-fact"><small>Categoría</small><b>${esc(p.category||'No disponible')}</b></div></div><div class="online-tools"><button class="btn btn-line btn-web" onclick="webPeekProduct(productByIndex(${p._i}))">🌐 ${k.status==='pending'?'Ver para qué sirve':'Consulta web'}</button><button class="btn btn-line" onclick="googleImage(productByIndex(${p._i}))">🖼 Ver imagen</button>${k.sourceUrl?`<button class="btn btn-line" onclick="knowledgeSource(productByIndex(${p._i}))">Fuente</button>`:''}</div><button class="detail-toggle" onclick="toggleProductDetail()"><span>Más detalle</span><span>＋</span></button><div class="detail-panel" id="productDetailPanel"><div class="detail-grid">${k.cases&&k.cases.length?`<div class="detail-card"><h4>Se usa principalmente en</h4><ul>${k.cases.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}${k.avoid?`<div class="detail-card"><h4>Cuándo tener cuidado</h4><p>${esc(k.avoid)}</p></div>`:''}${k.effects?`<div class="detail-card"><h4>Efectos relevantes</h4><p>${esc(k.effects)}</p></div>`:''}<div class="detail-card"><h4>Datos del producto</h4><p>Laboratorio: ${esc(p.lab||'No disponible')}<br>Registro: ${esc(p.register||'No disponible')}</p></div></div><div class="source-mini">${esc(k.source||'')}</div></div><h3>Productos relacionados · no equivalentes</h3><div class="alternatives">${alts.length?alts.map(a=>{let ak=knowledgeFor(a);return`<div class="alt" data-alt="${a._i}"><b>${esc(a.name)}</b><div class="footnote">Stock ${a.stock} · ${money(a.price)}</div><div class="product-use">${esc(ak.use)}</div></div>`}).join(''):'<p class="footnote">No encontré alternativas claras.</p>'}</div>`;
+ $('drawer').classList.add('open');$('overlay').classList.add('show');$('drawer').querySelectorAll('[data-alt]').forEach(e=>e.onclick=()=>openProduct(Number(e.dataset.alt)))
+}
+function closeDrawer(){$('drawer').classList.remove('open');$('overlay').classList.remove('show')}
+function findAlternatives(p){let a=norm(p.active),c=norm(p.category);return catalog.filter(x=>x._i!==p._i&&x.stock>0&&((a&&norm(x.active)===a)||(c&&norm(x.category)===c))).sort((x,y)=>(a&&norm(x.active)===a?-1:0)-(a&&norm(y.active)===a?-1:0)||y.stock-x.stock).slice(0,6)}
+function renderInventory(){let q=norm($('invSearch')?.value||''),f=$('stockFilter')?.value||'all';let rows=catalog.filter(p=>!q||norm([p.code,p.name,p.active,p.category,p.lab].join(' ')).includes(q)).filter(p=>f==='all'||(f==='available'&&p.stock>0)||(f==='low'&&p.stock>0&&p.stock<=5)||(f==='zero'&&p.stock<=0)).slice(0,500);$('inventoryBody').innerHTML=rows.length?rows.map(p=>`<tr data-index="${p._i}"><td>${esc(p.code)}</td><td><b>${esc(p.name)}</b></td><td>${esc(p.active||'—')}</td><td>${esc(p.presentation||'—')}</td><td>${p.stock}</td><td>${money(p.price)}</td><td>${esc(p.category||'—')}</td></tr>`).join(''):`<tr><td colspan="7" class="empty">Sin registros.</td></tr>`;$('inventoryBody').querySelectorAll('tr[data-index]').forEach(e=>e.onclick=()=>webPeekProduct(productByIndex(Number(e.dataset.index))))}
+function setPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));$('page-'+p).classList.add('active');if(p==='inventario')renderInventory()}
+function setFlow(flow){activeFlow=flow;document.querySelectorAll('#flowTypes button').forEach(x=>x.classList.toggle('active',x.dataset.flow===flow))}
+// Events
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
+$('uploadTop').onclick=$('uploadInv').onclick=()=>{$('fileInput').value='';$('fileInput').click()};
+$('fileInput').onchange=e=>{let f=e.target.files[0];if(f)readFile(f)};
+let invTimer=null;
+$('globalSearch').oninput=e=>{setPage('consulta');if(!e.target.value.trim())renderResults('',{commit:false})};
+$('globalSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();setPage('consulta');renderResults(e.currentTarget.value,{commit:true})}};
+$('invSearch').oninput=()=>{clearTimeout(invTimer);invTimer=setTimeout(renderInventory,160)};$('stockFilter').onchange=renderInventory;
+$('overlay').onclick=closeDrawer;$('webClose').onclick=closeWebPeek;$('webModal').onclick=e=>{if(e.target===$('webModal'))closeWebPeek()};
+$('closeMap').onclick=()=>$('mapModal').classList.remove('show');
+$('applyMap').onclick=()=>{let m={};document.querySelectorAll('[data-map]').forEach(s=>{if(s.value)m[s.dataset.map]=s.value});if(!m.name){toast('Selecciona la columna de Producto / descripción');return}currentMap=m;catalog=normalizeRows(rawRows,m);save();recordInventoryImport();$('mapModal').classList.remove('show');updateAll();toast(`Inventario cargado: ${catalog.length} registros`)};
+$('clearInventory').onclick=()=>{if(confirm('¿Eliminar el catálogo guardado en este navegador?')){catalog=[];localStorage.removeItem(LS);updateAll();toast('Catálogo limpiado')}};
+$('caseText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();interpretFreeCase()}};
+
+let evalTimer=null;function scheduleEvaluate(){clearTimeout(evalTimer);evalTimer=setTimeout(evaluate,120)}
+['patient','patientAge','duration','symptoms','otherMeds','allergies','conditions','alarmCheck'].forEach(id=>{let el=$(id);if(el){el.addEventListener('change',scheduleEvaluate);el.addEventListener('input',scheduleEvaluate)}});
+document.querySelectorAll('.redflag').forEach(x=>x.addEventListener('change',scheduleEvaluate));
+document.querySelectorAll('#flowTypes button').forEach(b=>b.onclick=()=>{setFlow(b.dataset.flow);scheduleEvaluate()});
+document.querySelectorAll('.quick').forEach(b=>b.onclick=()=>{setPage('orientacion');let s=b.dataset.symptom;if(s==='dolor')setFlow('dolor');if(s==='respiratorio')setFlow('resfriado');if(s==='gastro')setFlow('gastro');if(s==='antibiotico')setFlow('antibiotico');scheduleEvaluate()});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('globalSearch').focus()};if(e.key==='Escape'){closeDrawer();closeWebPeek();$('mapModal').classList.remove('show')}});
+load();
+$('exampleCases').innerHTML=CASE_EXAMPLES.map(([label],i)=>`<button class="btn btn-soft" data-example="${i}">${esc(label)}</button>`).join('');
+$('exampleCases').querySelectorAll('button').forEach(b=>b.onclick=()=>{resetWizard();$('caseText').value=CASE_EXAMPLES[Number(b.dataset.example)][1];interpretFreeCase()});
+$('caseSources').innerHTML=CASE_SOURCES.map(([label,url])=>`<div class="source-card"><a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a><p class="footnote">Consultada ${CASE_REVIEW_DATE}. Verificar cambios antes de aprobar uso operativo.</p></div>`).join('');
+renderInventoryStamp();
+</script>
+
+<script>
+// Firebase v3.14: manual shared snapshots, no patient/case uploads.
+const firebaseConfig = {
+ apiKey: "AIzaSyAsRO81VLlz13XTXUutCMssHei9cl3FKvY",
+ authDomain: "puntofarma-3f97b.firebaseapp.com",
+ databaseURL: "https://puntofarma-3f97b-default-rtdb.firebaseio.com",
+ projectId: "puntofarma-3f97b",
+ storageBucket: "puntofarma-3f97b.firebasestorage.app",
+ messagingSenderId: "258166826459",
+ appId: "1:258166826459:web:64c6eaade3cf8b56f833fe"
+};
+let cloudUser=null,cloudETag=null,cloudBusy=false,cloudAuth=null;
+const cloudMessage=m=>$('cloudStatus').textContent=m;
+const originalLocalSave=save;
+save=function(){originalLocalSave();cloudMessage('Cambios locales · pulsa Guardar inventario en Firebase para compartirlos.')};
+function cloudError(e){
+ if(e.code==='auth/admin-restricted-operation'||e.code==='auth/operation-not-allowed')return 'Habilita el método Anónimo en Firebase Authentication.';
+ if(e.status===401||e.status===403)return 'Acceso pendiente: autoriza el identificador de este navegador en devices y revisa las reglas. Tu catálogo local se conserva.';
+ if(e.status===412)return 'Otro dispositivo cambió el inventario. Trae la versión de Firebase antes de volver a guardar. Tus cambios locales siguen disponibles.';
+ if(e.name==='AbortError')return 'Tiempo de espera agotado. El guardado no está confirmado; vuelve a conectar y revisa Firebase antes de repetir.';
+ return 'No se confirmó la operación en Firebase: '+(e.message||e.code||'revisa tu conexión');
+}
+async function cloudRequest(method='GET',body=null,etag=null){
+ if(!navigator.onLine)throw new Error('Sin conexión a internet');
+ const token=await cloudUser.getIdToken();
+ const headers={'Content-Type':'application/json','X-Firebase-ETag':'true'};
+ if(etag!==null)headers['if-match']=etag;
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+ try{
+ const response=await fetch(firebaseConfig.databaseURL+'/inventory.json?auth='+encodeURIComponent(token),{method,headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store'});
+ if(!response.ok){const error=new Error('Respuesta '+response.status);error.status=response.status;throw error}
+ return {value:await response.json(),etag:response.headers.get('ETag')};
+ }finally{clearTimeout(timer)}
+}
+function parseCloud(value){
+ if(value===null)return null;
+ if(value.schema!==1||typeof value.payload!=='string')throw new Error('Formato de inventario no compatible');
+ const data=JSON.parse(value.payload);
+ if(!Array.isArray(data.catalog)||!data.catalog.every(p=>p&&typeof p==='object'&&typeof p.name==='string')||!data.map||typeof data.map!=='object')throw new Error('Catálogo remoto inválido');
+ return data;
+}
+async function cloudAction(fn){
+ if(cloudBusy)return;cloudBusy=true;
+ ['cloudConnect','cloudLoad','cloudSave'].forEach(id=>$(id).disabled=true);
+ try{await fn()}catch(e){cloudMessage(cloudError(e))}finally{
+ cloudBusy=false;$('cloudConnect').disabled=false;
+ $('cloudLoad').disabled=!cloudUser;$('cloudSave').disabled=!cloudUser||!cloudETag;
+ }
+}
+$('cloudConnect').onclick=()=>cloudAction(async()=>{
+ cloudMessage('Conectando dispositivo…');cloudETag=null;
+ const [appSDK,authSDK]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js')]);
+ if(!cloudAuth){const app=appSDK.initializeApp(firebaseConfig);cloudAuth=authSDK.getAuth(app);await authSDK.setPersistence(cloudAuth,authSDK.browserLocalPersistence)}
+ await cloudAuth.authStateReady();
+ cloudUser=cloudAuth.currentUser||(await authSDK.signInAnonymously(cloudAuth)).user;
+ $('cloudUid').textContent=cloudUser.uid;
+ const remote=await cloudRequest();parseCloud(remote.value);cloudETag=remote.etag;
+ cloudMessage(remote.value?'Firebase disponible · pulsa Traer para consultar el inventario compartido, o Guardar para reemplazarlo con tu copia local.':'Firebase vacío · carga tu Excel y pulsa Guardar inventario en Firebase.');
+});
+$('cloudLoad').onclick=()=>cloudAction(async()=>{
+ if(catalog.length&&!confirm('¿Reemplazar el catálogo de este navegador con la versión de Firebase? Los cambios locales no enviados se perderán.'))return;
+ cloudMessage('Consultando inventario en Firebase…');
+ const remote=await cloudRequest();const data=parseCloud(remote.value);cloudETag=remote.etag;
+ if(!data){cloudMessage('Firebase está vacío. Se conserva tu catálogo local.');return}
+ catalog=data.catalog;currentMap=data.map;originalLocalSave();
+ if(data.meta)localStorage.setItem('pf_inventory_meta_v313',JSON.stringify(data.meta));else localStorage.removeItem('pf_inventory_meta_v313');
+ catalog.forEach((p,i)=>{p._i=i;p._search=norm([p.code,p.name,p.active,p.presentation,p.category,p.lab,Object.values(p.raw||{}).join(' ')].join(' '))});
+ updateAll();$('inventoryStamp').textContent='Fecha de archivo no disponible; confirma existencias.';renderInventoryStamp();
+ cloudMessage('Inventario recibido de Firebase · '+catalog.length+' registros · '+new Date(remote.value.updatedAt).toLocaleString('es-EC'));
+});
+$('cloudSave').onclick=()=>cloudAction(async()=>{
+ if(!catalog.length)throw new Error('Carga un inventario antes de guardarlo. No se envía un catálogo vacío.');
+ if(!cloudETag)throw new Error('Conecta el dispositivo antes de guardar');
+ if(!confirm('¿Guardar los '+catalog.length+' registros locales como inventario compartido? Reemplazará la versión anterior en Firebase.'))return;
+ const payload=JSON.stringify({catalog,map:currentMap,meta:JSON.parse(localStorage.getItem('pf_inventory_meta_v313')||'null')});
+ cloudMessage('Guardando en Firebase… espera la confirmación.');
+ try{
+ const result=await cloudRequest('PUT',{schema:1,payload,updatedAt:{'.sv':'timestamp'}},cloudETag);
+ cloudETag=result.etag;
+ cloudMessage('Guardado confirmado en Firebase · '+catalog.length+' registros · '+new Date().toLocaleString('es-EC'));
+ }catch(e){cloudETag=null;throw e}
+});
+$('copyUid').onclick=async()=>{if(!cloudUser){toast('Primero conecta el dispositivo');return}try{await navigator.clipboard.writeText(cloudUser.uid);toast('Identificador copiado')}catch(e){toast('Selecciona y copia el identificador visible')}};
+</script>
+
+</body>
+</html>
