@@ -279,7 +279,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
 <div class="firebase-actions"><button class="btn btn-green" id="cloudConnect">Reintentar conexión</button><button class="btn btn-line" id="cloudLoad" disabled>Traer inventario de Firebase</button><button class="btn btn-green" id="cloudSave" disabled>Guardar inventario en Firebase</button></div>
 
 <details id="ageWebConfig" style="margin-top:12px"><summary style="cursor:pointer">Investigación web de edades (configuración única)</summary><p class="footnote">Opcional: pega la URL de tu servicio Cloudflare Worker. Se guarda en Firebase para todos los colaboradores. La clave del buscador debe permanecer como secreto en Cloudflare, nunca en el HTML.</p><div class="toolbar"><input id="ageWebUrl" type="url" placeholder="https://puntofarma-edades.usuario.workers.dev" aria-label="URL del servicio de investigación de edades"><button class="btn btn-line" id="saveAgeWeb" type="button">Guardar conexión</button></div><p class="footnote" id="ageWebStatus">Sin servicio de búsqueda web conectado. Se utilizan fichas conocidas y fuentes farmacológicas públicas.</p><p class="footnote" id="ageWebUsage">Protección de créditos: máximo 20 nuevas consultas externas al día, compartidas entre colaboradores. No se cobran búsquedas cuando el cupo diario está agotado por esta web.</p></details>
-<details id="firebaseHelp"><summary>Información de Firebase</summary><p class="footnote">PuntoFARMA utiliza Firebase como fuente principal. La autenticación anónima debe estar habilitada y las reglas de Realtime Database deben autorizar las rutas <code>inventory</code> y <code>ageProfiles</code>. No abras la base a usuarios sin autenticar. La información de pacientes no se guarda.</p><p>Sesión: <code id="cloudUid">Sin conectar</code> <button class="btn btn-line" id="copyUid">Copiar identificador</button></p></details></div></details></div>
+<details id="firebaseHelp"><summary>Información de Firebase</summary><p class="footnote">PuntoFARMA utiliza Firebase como fuente principal. El catálogo compartido se consulta en Firestore del proyecto INVENTARIOS; la autenticación anónima debe estar habilitada y las reglas deben permitir la lectura de service_products y locations. No abras la base a usuarios sin autenticar. La información de pacientes no se guarda.</p><p>Sesión: <code id="cloudUid">Sin conectar</code> <button class="btn btn-line" id="copyUid">Copiar identificador</button></p></details></div></details></div>
         <div class="card">
           <div class="section-title"><h3>Configuración · Inventario y precios</h3><div class="inv-actions"><button class="inv-icon" id="uploadInv" title="Cargar inventario inicial o reemplazar el catálogo completo" aria-label="Cargar catálogo">⇧</button><button class="inv-icon" id="updateStock" title="Actualizar las existencias por código mediante Excel" aria-label="Actualizar stock">⟳</button><button class="inv-icon" id="undoStock" title="Deshacer el último ajuste de stock" aria-label="Deshacer actualización">↶</button><button class="inv-icon inv-danger" id="clearInventory" title="Recargar el inventario desde Firebase" aria-label="Recargar inventario">♜</button></div></div>
           <p id="inventoryStamp" class="footnote">Sin fecha de actualización</p><div class="pf-age-progress" id="ageCoverage" role="status" aria-live="polite">Edades: esperando inventario de Firebase…</div><div class="inventory-metrics" aria-label="Resumen del inventario">
@@ -1589,9 +1589,43 @@ const renderInventoryBase=renderInventory;
 renderInventory=function(){renderInventoryBase();$('inventoryBody').querySelectorAll('tr[data-index]').forEach(row=>{const index=catalog.findIndex(p=>p._i===Number(row.dataset.index)),cell=row.children[4];cell.innerHTML='<button class="stock-edit" title="Editar cantidad">'+catalog[index].stock+'</button>';cell.querySelector('button').onclick=e=>{e.stopPropagation();if(!requireCloud())return;const value=prompt('Stock actual de '+catalog[index].name,catalog[index].stock);if(value===null)return;const n=quantity(value);if(n===null){toast('Ingresa una cantidad válida, mayor o igual a cero');return}try{rememberStock()}catch(e){toast('No se pudo respaldar el cambio');return}catalog[index].stock=n;window.pendingInventoryName='Ajuste manual';recordInventoryImport();refreshStock()}})};
 renderInventory();
 // Conectar automáticamente cuando la página esté lista, conservando la acción manual para reintentar.
-if(navigator.onLine) { cloudMessage('Conectando automáticamente con Firebase…'); Promise.resolve().then(()=>$('cloudConnect').click()); }
+if(navigator.onLine) { cloudMessage('Inventario unificado disponible mediante Firestore.'); }
 else cloudMessage('Sin conexión a internet · inventario en Firebase no disponible.');
 window.addEventListener('online',()=>{if(!cloudBusy&&!cloudETag)$('cloudConnect').click()});
 
-</script></body>
+</script><script type="module">
+/* Catálogo PuntoFarma en un único Firestore, sin Cloud Functions.
+   Las búsquedas se realizan en memoria; la escucha de productos carga el catálogo una vez
+   y después recibe sólo los documentos modificados. */
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import {getFirestore,collection,onSnapshot} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+const cfg={apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',storageBucket:'inventarios-cb809.firebasestorage.app',messagingSenderId:'381711255176',appId:'1:381711255176:web:66315bf07b5e73d065413d'};
+const app=initializeApp(cfg,'puntofarma-service-unified');const auth=getAuth(app),db=getFirestore(app);
+let unsub=null,unsubLocations=null,connected=false,items=new Map(),locations=new Map();
+const stamp=document.createElement('div');stamp.id='pfUnifiedStatus';stamp.style.cssText='padding:10px 14px;margin:10px 0;border:1px solid #cbe4e6;background:#f3fcfc;border-radius:10px;color:#165576;font:600 12px system-ui';stamp.textContent='Catálogo compartido: conectando…';
+(document.querySelector('.content')||document.body).prepend(stamp);
+const safe=t=>String(t??'');
+// El encabezado debe representar el Firestore maestro, no la antigua RTDB.
+function pfMasterStatus(state,message){
+ const dot=document.getElementById('cloudTopDot'),label=document.getElementById('cloudTopText'),pill=document.getElementById('uploadTop');
+ const ok=state==='ok';
+ if(dot)dot.classList.toggle('on',ok);
+ if(label)label.textContent=ok?'Firebase · Conectado':state==='loading'?'Firebase · Conectando…':'Firebase · Sin conectar';
+ if(pill){pill.title=message;pill.setAttribute('aria-label',message)}
+ const legacy=document.getElementById('cloudStatus');if(legacy)legacy.textContent=message;
+}
+pfMasterStatus('loading','Conectando con Firestore de Inventarios…');
+function transform(x,id){return {code:safe(x.code),name:safe(x.name),price:x.pvp==null?'':Number(x.pvp),qty:Number(x.qty)||0,stock:Number(x.qty)||0,location:safe(locations.get(id)||x.location),presentation:safe(x.presentation),category:safe(x.category),active:safe(x.active),_sourceId:id,_i:0,raw:{}}}
+let debounced=0;
+function display(){clearTimeout(debounced);debounced=setTimeout(()=>{const oldSearch=document.getElementById('searchInput')?.value||'';catalog=[...items.entries()].map(([id,p])=>transform(p,id));try{rebuildCatalog();pfRenderPrices?.()}catch(e){console.error('Render unificado',e)}stamp.textContent='✓ Firebase principal conectado · '+catalog.length+' productos · Ubicaciones y PVP automáticos';pfMasterStatus('ok','Firestore principal conectado · '+catalog.length+' productos');},180)}
+function activate(){if(unsub)return;stamp.textContent='Sincronizando catálogo principal…';unsubLocations=onSnapshot(collection(db,'locations'),snapshot=>{for(const d of snapshot.docChanges()){if(d.type==='removed')locations.delete(d.doc.id);else locations.set(d.doc.id,String(d.doc.data().location||''))}if(connected)display()},e=>{stamp.textContent='Ubicaciones no disponibles: '+e.message});unsub=onSnapshot(collection(db,'service_products'),snapshot=>{if(!connected){items.clear();connected=true}for(const d of snapshot.docChanges()){if(d.type==='removed')items.delete(d.doc.id);else items.set(d.doc.id,d.doc.data())}display()},e=>{stamp.textContent='No se pudo consultar el catálogo compartido: '+e.message+' · verifica reglas y catálogo inicial';pfMasterStatus('error','Error de Firestore: '+e.message);});}
+try{await signInAnonymously(auth);activate()}catch(e){stamp.textContent='Error de acceso al catálogo principal: '+e.message;pfMasterStatus('error','Error de autenticación: '+e.message)}
+// Atención al Cliente funciona como consulta del inventario maestro.
+// Evitar cargas y ediciones del inventario anterior (Realtime Database).
+const css=document.createElement('style');css.textContent=`#page-inventory input[type=file],#page-inventory button[data-price-index],#pfPriceEditor button[data-price-index],#pfLocationImport,#pfPasteMap,#pfApplyMap,#cloudSave,#cloudLoad,#cloudConnect,#stockFile,#inventoryFile,#pfPasteMap,#pfApplyMap{display:none!important}`;document.head.append(css);
+const note=document.createElement('div');note.style.cssText='padding:10px 14px;background:#eef8fc;border-radius:9px;font-size:13px;margin:12px 0';note.innerHTML='<b>Inventario unificado:</b> stock, ubicaciones y PVP se administran desde Supervisión de Inventario. Esta web es de consulta. La base antigua permanece intacta como respaldo.';
+(document.getElementById('pfPriceEditor')?.parentElement||document.querySelector('.content')||document.body).prepend(note);
+</script>
+</body>
 </html>
