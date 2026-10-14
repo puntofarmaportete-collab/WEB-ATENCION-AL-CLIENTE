@@ -210,6 +210,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
 <nav class="nav">
 <button class="active" data-page="consulta" title="Buscar productos"><span class="nav-icon">⌕</span><span class="nav-label">Buscar productos</span></button>
 <button data-page="orientacion" title="Consultar un caso"><span class="nav-icon">✚</span><span class="nav-label">Consultar un caso</span></button>
+<button data-page="demanda" title="Demanda no atendida"><span class="nav-icon">▤</span><span class="nav-label">Demanda no atendida</span></button>
 <button data-page="inventario" title="Configuración"><span class="nav-icon">▦</span><span class="nav-label">Configuración</span></button>
 <button data-page="seguridad" class="help-nav" title="Ayuda y referencias"><span class="nav-icon">ⓘ</span><span class="nav-label">Ayuda y referencias</span></button>
 </nav>
@@ -231,7 +232,7 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
         </div>
         <div class="card">
           <div class="section-title"><h3>Resultados</h3><span class="footnote" id="resultLabel"></span></div>
-          <div id="suggestionBar" class="suggestion"></div>
+          <div id="suggestionBar" class="suggestion"></div><div style="margin:6px 0 13px"><button id="demandFromSearch" class="btn btn-line" type="button">＋ Registrar producto solicitado que no tenemos</button></div>
           <div id="results" class="results"></div>
         </div>
       </section>
@@ -271,7 +272,27 @@ button,input,select,textarea{font:inherit}.shell{max-width:1450px;margin:auto;pa
         </div>
       </section>
 
-      <section class="page" id="page-inventario"><div class="card" style="margin-bottom:16px">
+      <section class="page" id="page-demanda">
+ <div class="card" style="margin-bottom:14px"><div class="section-title"><h3>Demanda no atendida</h3><span class="chip">Registro de solicitudes</span></div>
+  <div class="form-grid">
+   <div class="field full"><label>Producto solicitado</label><input id="demName" maxlength="220" placeholder="Nombre, presentación o medicamento"></div>
+   <div class="field"><label>Código (opcional)</label><input id="demCode" maxlength="80" placeholder="Código del producto"></div>
+   <div class="field"><label>Cantidad solicitada</label><input id="demQty" type="number" min="1" max="100000" step="1" value="1"></div>
+   <div class="field"><label>Motivo</label><select id="demReason"><option value="No catalogado">No está en nuestro catálogo</option><option value="Agotado">Producto agotado</option></select></div>
+   <div class="field"><label>Colaborador (opcional)</label><input id="demWorker" maxlength="100" placeholder="Nombre"></div>
+   <div class="field full"><label>Observación (opcional)</label><input id="demNotes" maxlength="350" placeholder="Presentación o detalle solicitado"></div>
+  </div>
+  <div class="toolbar" style="margin-top:14px"><button class="btn btn-green" type="button" id="demSave">Guardar solicitud</button><span class="footnote" id="demSaveStatus"></span></div>
+ </div>
+ <div class="card"><div class="section-title"><h3>Historial y prioridades de compra</h3></div>
+ <div class="toolbar"><input id="demFilter" placeholder="Buscar producto o código"><select id="demStateFilter"><option value="">Todos los estados</option><option value="Pendiente">Pendiente</option><option value="Comprado">Comprado</option><option value="Descartado">Descartado</option></select><button type="button" class="btn btn-line" id="demRefresh">Actualizar</button><button type="button" class="btn btn-soft" id="demCopy">Copiar</button><button type="button" class="btn btn-green" id="demExcel">Descargar Excel</button></div>
+ <p class="footnote" id="demStatus">Se consulta Firebase solo al abrir o actualizar esta sección.</p>
+ <div id="demSummary" class="stock-summary"></div>
+ <div class="table-wrap" style="max-height:260px"><table class="table"><thead><tr><th>Producto</th><th>Solicitudes</th><th>Unidades</th><th>Estado</th></tr></thead><tbody id="demGrouped"></tbody></table></div>
+ <h4 style="margin:20px 0 10px">Solicitudes individuales</h4><div class="table-wrap" style="max-height:360px"><table class="table"><thead><tr><th>Fecha</th><th>Producto</th><th>Código</th><th>Cant.</th><th>Motivo</th><th>Colaborador</th><th>Observación</th><th>Estado</th></tr></thead><tbody id="demRows"></tbody></table></div>
+ </div>
+</section>
+<section class="page" id="page-inventario"><div class="card" style="margin-bottom:16px">
 <details class="firebase-panel">
 <summary><span>Inventario compartido</span><span class="firebase-summary-right">Opciones Firebase</span></summary>
 <div class="firebase-panel-body">
@@ -1627,6 +1648,32 @@ try{await signInAnonymously(auth);activate()}catch(e){stamp.textContent='Error d
 const css=document.createElement('style');css.textContent=`#page-inventory input[type=file],#page-inventory button[data-price-index],#pfPriceEditor button[data-price-index],#pfLocationImport,#pfPasteMap,#pfApplyMap,#cloudSave,#cloudLoad,#cloudConnect,#stockFile,#inventoryFile,#pfPasteMap,#pfApplyMap{display:none!important}`;document.head.append(css);
 const note=document.createElement('div');note.style.cssText='padding:10px 14px;background:#eef8fc;border-radius:9px;font-size:13px;margin:12px 0';note.innerHTML='<b>Inventario unificado:</b> stock, ubicaciones y PVP se administran desde Supervisión de Inventario. Esta web es de consulta. La base antigua permanece intacta como respaldo.';
 (document.getElementById('pfPriceEditor')?.parentElement||document.querySelector('.content')||document.body).prepend(note);
+</script>
+<script type="module">
+// Registro independiente de demanda: no escribe en catalog, stock ni locations.
+import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import {getFirestore,collection,addDoc,getDocs,updateDoc,doc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+const app=getApps().find(a=>a.name==='puntofarma-demand')||initializeApp({apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',appId:'1:381711255176:web:66315bf07b5e73d065413d'},'puntofarma-demand');
+const db=getFirestore(app), auth=getAuth(app);const $=id=>document.getElementById(id);let list=[],initialized=false,lastLoaded=0,loading=null;
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function authReady(){if(!auth.currentUser)await signInAnonymously(auth)}
+function key(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toUpperCase()}
+function filtered(){const f=key($('demFilter').value),st=$('demStateFilter').value;return list.filter(x=>(!st||x.status===st)&&(!f||key(x.product).includes(f)||key(x.code).includes(f)))}
+function aggregate(rows){const groups=new Map();for(const x of rows){const k=key(x.code)?key(x.code)+'|'+key(x.product):key(x.product);if(!groups.has(k))groups.set(k,{product:x.product,requests:0,units:0,pending:0,states:new Set()});const g=groups.get(k);g.requests++;g.units+=Number(x.qty)||0;if(x.status==='Pendiente')g.pending++;g.states.add(x.status)}return [...groups.values()].sort((a,b)=>b.requests-a.requests||b.units-a.units)}
+function render(){const a=filtered(),grp=aggregate(a);$('demSummary').textContent=`${a.length} solicitudes · ${a.reduce((t,x)=>t+Number(x.qty||0),0)} unidades solicitadas · ${grp.length} productos distintos`;
+$('demGrouped').innerHTML=grp.map(g=>`<tr><td>${escape(g.product)}</td><td>${g.requests}</td><td>${g.units}</td><td>${g.pending?'Pendiente ('+g.pending+')':'Gestionado'}</td></tr>`).join('')||'<tr><td colspan="4">Sin registros</td></tr>';
+$('demRows').innerHTML=a.map(x=>`<tr><td>${escape(x.createdAtText)}</td><td>${escape(x.product)}</td><td>${escape(x.code)}</td><td>${x.qty}</td><td>${escape(x.reason)}</td><td>${escape(x.worker)}</td><td>${escape(x.notes)}</td><td><select data-dem-id="${escape(x.id)}"><option ${x.status==='Pendiente'?'selected':''}>Pendiente</option><option ${x.status==='Comprado'?'selected':''}>Comprado</option><option ${x.status==='Descartado'?'selected':''}>Descartado</option></select></td></tr>`).join('')||'<tr><td colspan="8">Sin registros</td></tr>';
+$('demRows').querySelectorAll('select[data-dem-id]').forEach(el=>el.addEventListener('change',async()=>{const found=list.find(x=>x.id===el.dataset.demId),old=found.status;el.disabled=true;try{await authReady();await updateDoc(doc(db,'customer_demands',found.id),{status:el.value,updatedAt:serverTimestamp()});found.status=el.value;render()}catch(e){found.status=old;el.value=old;alert('No se guardó el estado: '+e.message)}finally{el.disabled=false}}));}
+async function refresh(force=false){if(loading)return loading;if(initialized&&!force&&Date.now()-lastLoaded<60000){render();return}loading=(async()=>{try{$('demStatus').textContent='Cargando solicitudes…';await authReady();const snap=await getDocs(collection(db,'customer_demands'));list=snap.docs.map(d=>({id:d.id,...d.data()}));initialized=true;lastLoaded=Date.now();$('demStatus').textContent='Datos actualizados · '+list.length+' registros. Actualización manual para ahorrar lecturas.';render()}catch(e){$('demStatus').textContent='No se pudieron cargar solicitudes: '+e.message}})();try{await loading}finally{loading=null}}
+$('demSave').addEventListener('click',async()=>{const product=$('demName').value.trim(),n=Number($('demQty').value),status=$('demSaveStatus');if(!product||!Number.isInteger(n)||n<1||n>100000){status.textContent='Completa producto y cantidad válida.';return}const btn=$('demSave');btn.disabled=true;status.textContent='Guardando…';try{await authReady();const value={product,code:$('demCode').value.trim(),qty:n,reason:$('demReason').value,worker:$('demWorker').value.trim(),notes:$('demNotes').value.trim(),status:'Pendiente',createdAt:serverTimestamp(),createdAtText:new Date().toLocaleString('es-EC'),updatedAt:serverTimestamp()};const ref=await addDoc(collection(db,'customer_demands'),value);list.unshift({...value,id:ref.id});status.textContent='Solicitud guardada correctamente.';$('demName').value='';$('demCode').value='';$('demQty').value='1';$('demNotes').value='';if(initialized)render()}catch(e){status.textContent='No se pudo guardar: '+e.message}finally{btn.disabled=false}});
+$('demRefresh').onclick=()=>refresh(true);$('demFilter').oninput=render;$('demStateFilter').onchange=render;
+function rowsExport(){return filtered().map(x=>({'Fecha':x.createdAtText,'Código':x.code||'','Producto':x.product,'Cantidad':x.qty,'Motivo':x.reason,'Colaborador':x.worker||'','Observación':x.notes||'','Estado':x.status}))}
+$('demCopy').onclick=async()=>{const rows=rowsExport(),headers=['Fecha','Código','Producto','Cantidad','Motivo','Colaborador','Observación','Estado'],txt=[headers.join('\t'),...rows.map(r=>headers.map(h=>String(r[h]??'').replace(/[\t\r\n]+/g,' ')).join('\t'))].join('\n');try{await navigator.clipboard.writeText(txt);$('demStatus').textContent=`Copiados ${rows.length} registros para pegar en Excel.`}catch(e){const area=document.createElement('textarea');area.value=txt;document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();$('demStatus').textContent=ok?'Registros copiados.':'El navegador bloqueó el portapapeles; usa la descarga Excel.'}};
+async function excelReady(){if(window.XLSX)return;for(const url of ['https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js']){try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=url;script.onload=resolve;script.onerror=reject;document.head.append(script)});if(window.XLSX)return}catch(e){}}throw Error('No se pudo cargar la biblioteca de Excel. Revisa tu conexión.')}
+$('demExcel').onclick=async()=>{const btn=$('demExcel');btn.disabled=true;try{await excelReady();const rows=rowsExport(),book=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows.length?rows:[{'Fecha':'','Código':'','Producto':'','Cantidad':'','Motivo':'','Colaborador':'','Observación':'','Estado':''}]);ws['!cols']=[{wch:21},{wch:19},{wch:50},{wch:12},{wch:21},{wch:22},{wch:36},{wch:16}];XLSX.utils.book_append_sheet(book,ws,'Solicitudes');const summary=aggregate(filtered()).map(g=>({'Producto':g.product,'Solicitudes':g.requests,'Unidades solicitadas':g.units,'Pendientes':g.pending}));if(summary.length){const sum=XLSX.utils.json_to_sheet(summary);sum['!cols']=[{wch:48},{wch:17},{wch:22},{wch:16}];XLSX.utils.book_append_sheet(book,sum,'Resumen por producto')}XLSX.writeFile(book,'PuntoFarma_Demanda_No_Atendida_'+new Date().toISOString().slice(0,10)+'.xlsx');$('demStatus').textContent='Excel .xlsx generado correctamente.'}catch(e){$('demStatus').textContent='Error de exportación: '+e.message}finally{btn.disabled=false}};
+$('demandFromSearch').onclick=()=>{const search=$('globalSearch');$('demName').value=search?.value.trim()||'';document.querySelector('.nav button[data-page="demanda"]').click();$('demName').focus()};
+const nav=document.querySelector('.nav button[data-page="demanda"]');nav.addEventListener('click',()=>refresh());
 </script>
 </body>
 </html>
