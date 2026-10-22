@@ -382,7 +382,7 @@ function toast(m){let e=$('toast');e.textContent=m;e.classList.add('show');setTi
 let inventoryMeta=null,inventoryDirty=false,inventoryUndo=null;
 function save(){inventoryDirty=true;if(typeof queueCloudAutosave==='function')queueCloudAutosave()}
 function load(){catalog=[];currentMap={};updateAll()}
-function requireCloud(){if(!cloudUser||!cloudETag||cloudBusy){toast('Espera la conexión y carga de Firebase antes de modificar el inventario.');return false}return true}
+function requireCloud(){toast('El inventario se administra desde Supervisión de Inventario.');return false}
 function rebuildCatalog(){catalog.forEach((p,i)=>{p._i=i;p._search=norm([p.code,p.name,p.active,p.presentation,p.category,p.lab,Object.values(p.raw||{}).join(' ')].join(' '))});updateAll();renderInventoryStamp()}
 function aliases(){return{
  code:['CODIGO','COD','SKU','ITEM','COD PRODUCTO','CODIGO PRODUCTO','CODIGO ITEM','ID','BARRAS','COD BARRA'],
@@ -1518,7 +1518,7 @@ function cloudError(e){
  if(e.name==='AbortError')return 'Tiempo de espera agotado. El guardado no está confirmado; vuelve a conectar y revisa Firebase antes de repetir.';
  return 'No se confirmó la operación en Firebase: '+(e.message||e.code||'revisa tu conexión');
 }
-async function cloudRequest(method='GET',body=null,etag=null){
+async function cloudRequest(method='GET',body=null,etag=null){throw new Error('Conexión antigua desactivada; usa el inventario maestro.');
  if(!navigator.onLine)throw new Error('Sin conexión a internet');
  const token=await cloudUser.getIdToken();
  const headers={'Content-Type':'application/json','X-Firebase-ETag':'true'};
@@ -1530,7 +1530,7 @@ async function cloudRequest(method='GET',body=null,etag=null){
  return {value:await response.json(),etag:response.headers.get('ETag')};
  }finally{clearTimeout(timer)}
 }
-async function cloudRequestPath(path,method='GET',body=null){if(!cloudUser)throw new Error('Sin autenticación Firebase');const token=await cloudUser.getIdToken(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),14000);try{const r=await fetch(firebaseConfig.databaseURL+path+'?auth='+encodeURIComponent(token),{method,headers:{'Content-Type':'application/json'},body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store'});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return{value:await r.json()}}finally{clearTimeout(timer)}}
+async function cloudRequestPath(path,method='GET',body=null){throw new Error('Este servicio antiguo no está conectado al inventario maestro.');if(!cloudUser)throw new Error('Sin autenticación Firebase');const token=await cloudUser.getIdToken(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),14000);try{const r=await fetch(firebaseConfig.databaseURL+path+'?auth='+encodeURIComponent(token),{method,headers:{'Content-Type':'application/json'},body:body===null?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store'});if(!r.ok){const e=new Error('HTTP '+r.status);e.status=r.status;throw e}return{value:await r.json()}}finally{clearTimeout(timer)}}
 function parseCloud(value){
  if(value===null)return null;
  if(value.schema!==1||typeof value.payload!=='string')throw new Error('Formato de inventario no compatible');
@@ -1546,19 +1546,7 @@ async function cloudAction(fn){
  $('cloudLoad').disabled=!cloudUser;$('cloudSave').disabled=!cloudUser||!cloudETag;
  }
 }
-$('cloudConnect').onclick=()=>cloudAction(async()=>{
- if(inventoryDirty&&catalog.length&&!confirm('Hay cambios pendientes en memoria. ¿Descartarlos y recargar el inventario desde Firebase?'))return;
- cloudMessage('Conectando dispositivo…');cloudETag=null;
- const [appSDK,authSDK]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js')]);
- if(!cloudAuth){const app=appSDK.initializeApp(firebaseConfig);cloudAuth=authSDK.getAuth(app);await authSDK.setPersistence(cloudAuth,authSDK.browserLocalPersistence)}
- await cloudAuth.authStateReady();cloudUser=cloudAuth.currentUser||(await authSDK.signInAnonymously(cloudAuth)).user;
- $('cloudUid').textContent=cloudUser.uid;
- const remote=await cloudRequest(),data=parseCloud(remote.value);cloudETag=remote.etag;
- if(data){catalog=data.catalog;currentMap=data.map;inventoryMeta=data.meta||null;inventoryDirty=false;rebuildCatalog();}
- else{catalog=[];currentMap={};inventoryMeta=null;inventoryDirty=false;rebuildCatalog();}
- cloudMessage(data?'Inventario recibido desde Firebase · '+catalog.length+' SKU':'Firebase conectado · la nube no tiene inventario. Importa el Excel desde Configuración.');
- await loadAgeProfiles();await loadAgeResearchUrl();scanAllProductAges();
-});
+$('cloudConnect').onclick=()=>toast('El inventario se sincroniza desde Firestore.');
 $('cloudLoad').onclick=()=>cloudAction(async()=>{
  if(inventoryDirty&&!confirm('Hay cambios pendientes de guardar. ¿Descartarlos y recuperar la nube?'))return;
  cloudMessage('Consultando inventario en Firebase…');const remote=await cloudRequest(),data=parseCloud(remote.value);cloudETag=remote.etag;
@@ -1646,17 +1634,34 @@ renderInventory();
 // Conectar automáticamente cuando la página esté lista, conservando la acción manual para reintentar.
 if(navigator.onLine) { cloudMessage('Inventario unificado disponible mediante Firestore.'); }
 else cloudMessage('Sin conexión a internet · inventario en Firebase no disponible.');
-window.addEventListener('online',()=>{if(!cloudBusy&&!cloudETag)$('cloudConnect').click()});
+// La reconexión pertenece exclusivamente a Firestore.
 
-</script><script type="module">
+</script><script>
+window.pfFirebaseError=e=>{const c=e?.code||'error';return (c==='permission-denied'?'Firebase rechazó el acceso. Revisa las reglas de Firestore y los permisos de esta sesión.':c==='unavailable'?'Sin conexión con el servidor.':e?.message||'Error de conexión')+' ('+c+')'};
+window.pfFirebaseReady=(async()=>{
+ const root='https://www.gstatic.com/firebasejs/12.4.0/';
+ const [A,U,F]=await Promise.all([import(root+'firebase-app.js'),import(root+'firebase-auth.js'),import(root+'firebase-firestore.js')]);
+ const cfg={apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',storageBucket:'inventarios-cb809.firebasestorage.app',messagingSenderId:'381711255176',appId:'1:381711255176:web:66315bf07b5e73d065413d'};
+ const app=A.getApps().find(a=>a.options.projectId===cfg.projectId&&a.name==='[DEFAULT]')||A.initializeApp(cfg,A.getApps().some(a=>a.name==='[DEFAULT]')?'puntofarma-shared':'[DEFAULT]');
+ const auth=U.getAuth(app);let db;try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){console.warn('Caché persistente no disponible',e.code);db=F.getFirestore(app)}
+ const box=document.createElement('details');box.style.cssText='margin:10px 0;padding:10px;border:1px solid #cbe4e6;border-radius:9px';
+ box.innerHTML='<summary>Sesión Firebase · <span id="pfSessionLabel">Conectando…</span></summary><form id="pfSessionForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input name="email" type="email" autocomplete="username" placeholder="Correo autorizado" required aria-label="Correo autorizado"><input name="password" type="password" autocomplete="current-password" placeholder="Contraseña" required aria-label="Contraseña"><button type="submit" class="btn btn-green">Ingresar</button><button type="button" id="pfSessionOut" class="btn btn-line">Cerrar sesión</button></form><div id="pfSessionError" role="status"></div>';
+ (document.querySelector('.content')||document.body).prepend(box);
+ const form=document.getElementById('pfSessionForm'),err=document.getElementById('pfSessionError');
+ form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;err.textContent='Conectando…';try{await U.signInWithEmailAndPassword(auth,form.elements.email.value.trim(),form.elements.password.value);err.textContent='Sesión iniciada.';form.elements.password.value=''}catch(e){err.textContent=window.pfFirebaseError(e)}finally{b.disabled=false}};
+ document.getElementById('pfSessionOut').onclick=async()=>{try{await U.signOut(auth);await U.signInAnonymously(auth)}catch(e){err.textContent=window.pfFirebaseError(e)}};
+ U.onAuthStateChanged(auth,u=>{document.getElementById('pfSessionLabel').textContent=u?(u.isAnonymous?'Acceso anónimo':u.email||'Sesión iniciada'):'Sin sesión';document.getElementById('pfSessionOut').hidden=!u||u.isAnonymous});
+ await auth.authStateReady();if(!auth.currentUser)try{await U.signInAnonymously(auth)}catch(e){err.textContent=window.pfFirebaseError(e)}
+ return {app,auth,db,U,F};
+})();
+window.pfFirebaseReady.catch(e=>{for(const id of ['cloudTopText','demSaveStatus','demStatus','pfOrderAuthStatus']){const el=document.getElementById(id);if(el)el.textContent='No se pudo iniciar Firebase: '+window.pfFirebaseError(e)}});
+</script>
+<script type="module">
 /* Catálogo PuntoFarma en un único Firestore, sin Cloud Functions.
    Las búsquedas se realizan en memoria; la escucha de productos carga el catálogo una vez
    y después recibe sólo los documentos modificados. */
-import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
-import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import {getFirestore,collection,onSnapshot} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-const cfg={apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',storageBucket:'inventarios-cb809.firebasestorage.app',messagingSenderId:'381711255176',appId:'1:381711255176:web:66315bf07b5e73d065413d'};
-const app=initializeApp(cfg,'puntofarma-service-unified');const auth=getAuth(app),db=getFirestore(app);
+const {auth,db,U,F}=await window.pfFirebaseReady;
+const {onAuthStateChanged}=U;const {collection,onSnapshot}=F;
 let unsub=null,unsubLocations=null,connected=false,items=new Map(),locations=new Map();
 const stamp=document.createElement('div');stamp.id='pfUnifiedStatus';stamp.style.cssText='padding:10px 14px;margin:10px 0;border:1px solid #cbe4e6;background:#f3fcfc;border-radius:10px;color:#165576;font:600 12px system-ui';stamp.textContent='Catálogo compartido: conectando…';
 (document.querySelector('.content')||document.body).prepend(stamp);
@@ -1672,25 +1677,29 @@ function pfMasterStatus(state,message){
 }
 pfMasterStatus('loading','Conectando con Firestore de Inventarios…');
 function transform(x,id){return {code:safe(x.code),name:safe(x.name),price:x.pvp==null?'':Number(x.pvp),qty:Number(x.qty)||0,stock:Number(x.qty)||0,location:safe(locations.get(id)||x.location),presentation:safe(x.presentation),category:safe(x.category),fractionAllowed:x.fractionAllowed===true,fractionUnits:Number(x.fractionUnits||0),fractionOverride:x.fractionOverride===true,fractionPvp:x.fractionPvp==null?null:Number(x.fractionPvp),active:safe(x.active),_sourceId:id,_i:0,raw:{}}}
-let debounced=0;
-function display(){clearTimeout(debounced);debounced=setTimeout(()=>{const oldSearch=document.getElementById('searchInput')?.value||'';catalog=[...items.entries()].map(([id,p])=>transform(p,id));try{rebuildCatalog();pfRenderPrices?.()}catch(e){console.error('Render unificado',e)}stamp.textContent='✓ Firebase principal conectado · '+catalog.length+' productos · Ubicaciones y PVP automáticos';pfMasterStatus('ok','Firestore principal conectado · '+catalog.length+' productos');},180)}
-function activate(){if(unsub)return;stamp.textContent='Sincronizando catálogo principal…';unsubLocations=onSnapshot(collection(db,'locations'),snapshot=>{for(const d of snapshot.docChanges()){if(d.type==='removed')locations.delete(d.doc.id);else locations.set(d.doc.id,String(d.doc.data().location||''))}if(connected)display()},e=>{stamp.textContent='Ubicaciones no disponibles: '+e.message});unsub=onSnapshot(collection(db,'service_products'),snapshot=>{if(!connected){items.clear();connected=true}for(const d of snapshot.docChanges()){if(d.type==='removed')items.delete(d.doc.id);else items.set(d.doc.id,d.doc.data())}display()},e=>{stamp.textContent='No se pudo consultar el catálogo compartido: '+e.message+' · verifica reglas y catálogo inicial';pfMasterStatus('error','Error de Firestore: '+e.message);});}
-try{await signInAnonymously(auth);activate()}catch(e){stamp.textContent='Error de acceso al catálogo principal: '+e.message;pfMasterStatus('error','Error de autenticación: '+e.message)}
+let debounced=0;const sync={products:'loading',locations:'loading'},syncErrors={};
+function report(){const bad=Object.values(sync).includes('error'),ok=Object.values(sync).every(x=>x==='ok');const message=bad?'Sincronización incompleta · '+Object.values(syncErrors).join(' · '):ok?'Firebase conectado · '+catalog.length+' productos':'Esperando al servidor · datos aún no confirmados';stamp.textContent=message;pfMasterStatus(ok?'ok':bad?'error':'loading',message)}
+window.addEventListener('offline',()=>{sync.products='cache';sync.locations='cache';report()});
+function display(){clearTimeout(debounced);debounced=setTimeout(()=>{const oldSearch=document.getElementById('searchInput')?.value||'';catalog=[...items.entries()].map(([id,p])=>transform(p,id));try{rebuildCatalog();pfRenderPrices?.()}catch(e){console.error('Render unificado',e)}report();},180)}
+function activate(){
+ unsub?.();unsubLocations?.();unsub=null;unsubLocations=null;items.clear();locations.clear();connected=false;sync.products=sync.locations='loading';delete syncErrors.products;delete syncErrors.locations;display();
+ if(!auth.currentUser){sync.products='error';syncErrors.products='No hay sesión de Firebase';report();return}
+ unsubLocations=onSnapshot(collection(db,'locations'),{includeMetadataChanges:true},snapshot=>{sync.locations=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.locations;locations.clear();snapshot.docs.forEach(d=>locations.set(d.id,String(d.data().location||'')));display()},e=>{sync.locations='error';syncErrors.locations=window.pfFirebaseError(e);report()});
+ unsub=onSnapshot(collection(db,'service_products'),{includeMetadataChanges:true},snapshot=>{sync.products=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.products;items.clear();snapshot.docs.forEach(d=>items.set(d.id,d.data()));connected=true;display()},e=>{sync.products='error';syncErrors.products=window.pfFirebaseError(e);report()});
+}
+onAuthStateChanged(auth,activate);
 // Atención al Cliente funciona como consulta del inventario maestro.
 // Evitar cargas y ediciones del inventario anterior (Realtime Database).
-const css=document.createElement('style');css.textContent=`#page-inventory input[type=file],#page-inventory button[data-price-index],#pfPriceEditor button[data-price-index],#pfLocationImport,#pfPasteMap,#pfApplyMap,#cloudSave,#cloudLoad,#cloudConnect,#stockFile,#inventoryFile,#pfPasteMap,#pfApplyMap{display:none!important}`;document.head.append(css);
+const css=document.createElement('style');css.textContent=`#page-inventario input[type=file],#page-inventario button[data-price-index],#pfPriceEditor button[data-price-index],#pfLocationImport,#pfPasteMap,#pfApplyMap,#cloudSave,#cloudLoad,#cloudConnect,#stockFile,#inventoryFile,#pfPasteMap,#pfApplyMap{display:none!important}`;document.head.append(css);
 const note=document.createElement('div');note.style.cssText='padding:10px 14px;background:#eef8fc;border-radius:9px;font-size:13px;margin:12px 0';note.innerHTML='<b>Inventario unificado:</b> stock, ubicaciones y PVP se administran desde Supervisión de Inventario. Esta web es de consulta. La base antigua permanece intacta como respaldo.';
 (document.getElementById('pfPriceEditor')?.parentElement||document.querySelector('.content')||document.body).prepend(note);
 </script>
 <script type="module">
 // Registro independiente de demanda: no escribe en catalog, stock ni locations.
-import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
-import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import {getFirestore,collection,addDoc,getDocs,updateDoc,doc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-const app=getApps().find(a=>a.name==='puntofarma-demand')||initializeApp({apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',appId:'1:381711255176:web:66315bf07b5e73d065413d'},'puntofarma-demand');
-const db=getFirestore(app), auth=getAuth(app);const $=id=>document.getElementById(id);let list=[],initialized=false,lastLoaded=0,loading=null;
+const {auth,db,U,F}=await window.pfFirebaseReady;
+const {collection,setDoc,getDocFromServer,getDocsFromServer,query,orderBy,limit,startAfter,updateDoc,doc,serverTimestamp}=F;const $=id=>document.getElementById(id);let list=[],initialized=false,lastLoaded=0,loading=null;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function authReady(){if(!auth.currentUser)await signInAnonymously(auth)}
+async function authReady(){await auth.authStateReady();if(!auth.currentUser)throw new Error('No hay sesión de Firebase. Revisa Sesión Firebase.')}
 function key(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toUpperCase()}
 function filtered(){const f=key($('demFilter').value),st=$('demStateFilter').value;return list.filter(x=>(!st||x.status===st)&&(!f||key(x.product).includes(f)||key(x.code).includes(f)))}
 function aggregate(rows){const groups=new Map();for(const x of rows){const k=key(x.code)?key(x.code)+'|'+key(x.product):key(x.product);if(!groups.has(k))groups.set(k,{product:x.product,requests:0,units:0,pending:0,states:new Set()});const g=groups.get(k);g.requests++;g.units+=Number(x.qty)||0;if(x.status==='Pendiente')g.pending++;g.states.add(x.status)}return [...groups.values()].sort((a,b)=>b.requests-a.requests||b.units-a.units)}
@@ -1698,8 +1707,41 @@ function render(){const a=filtered(),grp=aggregate(a);$('demSummary').textConten
 $('demGrouped').innerHTML=grp.map(g=>`<tr><td>${escape(g.product)}</td><td>${g.requests}</td><td>${g.units}</td><td>${g.pending?'Pendiente ('+g.pending+')':'Gestionado'}</td></tr>`).join('')||'<tr><td colspan="4">Sin registros</td></tr>';
 $('demRows').innerHTML=a.map(x=>`<tr><td>${escape(x.createdAtText)}</td><td>${escape(x.product)}</td><td>${escape(x.code)}</td><td>${x.qty}</td><td>${escape(x.reason)}</td><td>${escape(x.worker)}</td><td>${escape(x.notes)}</td><td><select data-dem-id="${escape(x.id)}"><option ${x.status==='Pendiente'?'selected':''}>Pendiente</option><option ${x.status==='Comprado'?'selected':''}>Comprado</option><option ${x.status==='Descartado'?'selected':''}>Descartado</option></select></td></tr>`).join('')||'<tr><td colspan="8">Sin registros</td></tr>';
 $('demRows').querySelectorAll('select[data-dem-id]').forEach(el=>el.addEventListener('change',async()=>{const found=list.find(x=>x.id===el.dataset.demId),old=found.status;el.disabled=true;try{await authReady();await updateDoc(doc(db,'customer_demands',found.id),{status:el.value,updatedAt:serverTimestamp()});found.status=el.value;render()}catch(e){found.status=old;el.value=old;alert('No se guardó el estado: '+e.message)}finally{el.disabled=false}}));}
-async function refresh(force=false){if(loading)return loading;if(initialized&&!force&&Date.now()-lastLoaded<60000){render();return}loading=(async()=>{try{$('demStatus').textContent='Cargando solicitudes…';await authReady();const snap=await getDocs(collection(db,'customer_demands'));list=snap.docs.map(d=>({id:d.id,...d.data()}));initialized=true;lastLoaded=Date.now();$('demStatus').textContent='Datos actualizados · '+list.length+' registros. Actualización manual para ahorrar lecturas.';render()}catch(e){$('demStatus').textContent='No se pudieron cargar solicitudes: '+e.message}})();try{await loading}finally{loading=null}}
-$('demSave').addEventListener('click',async()=>{const product=$('demName').value.trim(),n=Number($('demQty').value),status=$('demSaveStatus');if(!product||!Number.isInteger(n)||n<1||n>100000){status.textContent='Completa producto y cantidad válida.';return}const btn=$('demSave');btn.disabled=true;status.textContent='Guardando…';try{await authReady();const value={product,code:$('demCode').value.trim(),qty:n,reason:$('demReason').value,worker:$('demWorker').value.trim(),notes:$('demNotes').value.trim(),status:'Pendiente',createdAt:serverTimestamp(),createdAtText:new Date().toLocaleString('es-EC'),updatedAt:serverTimestamp()};const ref=await addDoc(collection(db,'customer_demands'),value);list.unshift({...value,id:ref.id});status.textContent='Solicitud guardada correctamente.';$('demName').value='';$('demCode').value='';$('demQty').value='1';$('demNotes').value='';if(initialized)render()}catch(e){status.textContent='No se pudo guardar: '+e.message}finally{btn.disabled=false}});
+let demandCursor=null,demandGeneration=0;
+const demandMore=document.createElement('button');demandMore.type='button';demandMore.className='btn btn-line';demandMore.textContent='Cargar 100 anteriores';demandMore.hidden=true;$('demRefresh').after(demandMore);
+async function refresh(force=false,more=false){
+ if(loading)return loading;
+ if(initialized&&!force&&!more&&Date.now()-lastLoaded<60000){render();return}
+ const generation=demandGeneration;
+ loading=(async()=>{demandMore.disabled=true;try{await authReady();$('demStatus').textContent='Consultando solicitudes…';
+ const constraints=[orderBy('createdAt','desc'),limit(100)];if(more&&demandCursor)constraints.push(startAfter(demandCursor));
+ const snap=await getDocsFromServer(query(collection(db,'customer_demands'),...constraints));if(generation!==demandGeneration)return;
+ const rows=snap.docs.map(d=>({id:d.id,...d.data()}));list=more?[...new Map([...list,...rows].map(x=>[x.id,x])).values()]:rows;demandCursor=snap.docs.at(-1)||null;demandMore.hidden=snap.size<100;initialized=true;lastLoaded=Date.now();render();$('demStatus').textContent='Consulta actualizada · '+list.length+' registros cargados. Resumen y exportación: solo registros cargados.';
+ }catch(e){if(generation===demandGeneration)$('demStatus').textContent=window.pfFirebaseError(e)}finally{demandMore.disabled=false}})();
+ try{await loading}finally{loading=null}
+}
+demandMore.onclick=()=>refresh(false,true);
+const pendingPrefix='pf_dem_pending_v1_',inflight=new Set();
+function pending(){return Object.keys(localStorage).filter(k=>k.startsWith(pendingPrefix)).map(k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}}).filter(x=>x&&x.id&&x.value)}
+const retry=document.createElement('button');retry.className='btn btn-line';retry.type='button';retry.textContent='Reintentar pendientes';$('demSaveStatus').after(retry);
+function pendingMessage(message=''){const n=pending().length;$('demSaveStatus').textContent=message+(n?' · '+n+' solicitud(es) pendientes en este navegador':'');retry.hidden=!n}
+async function send(item){
+ if(inflight.has(item.id))return;
+ if(!navigator.onLine){pendingMessage('Sin internet. Respaldo local conservado');return}
+ inflight.add(item.id);const timer=setTimeout(()=>pendingMessage('Firebase aún no confirma el guardado. Respaldo local conservado'),10000);
+ try{await authReady();const ref=doc(db,'customer_demands',item.id);let exists=false;if(item.attempted)exists=(await getDocFromServer(ref)).exists();if(!exists){item.attempted=true;localStorage.setItem(pendingPrefix+item.id,JSON.stringify(item));await setDoc(ref,{...item.value,createdAt:serverTimestamp(),updatedAt:serverTimestamp()})}if(!list.some(x=>x.id===item.id)){list.unshift({...item.value,id:item.id});render()}localStorage.removeItem(pendingPrefix+item.id);pendingMessage('Solicitud confirmada en Firebase.')}catch(e){pendingMessage(window.pfFirebaseError(e)+' Respaldo local conservado.')}finally{clearTimeout(timer);inflight.delete(item.id)}
+}
+function retryAll(){try{pending().forEach(item=>void send(item))}catch(e){$('demSaveStatus').textContent='No se puede acceder al respaldo local: '+e.message}}
+retry.onclick=retryAll;window.addEventListener('online',retryAll);
+$('demSave').addEventListener('click',()=>{
+ const product=$('demName').value.trim(),n=Number($('demQty').value),status=$('demSaveStatus');
+ if(!product||!Number.isInteger(n)||n<1||n>100000){status.textContent='Completa producto y cantidad válida.';return}
+ const item={id:doc(collection(db,'customer_demands')).id,value:{product,code:$('demCode').value.trim(),qty:n,reason:$('demReason').value,worker:$('demWorker').value.trim(),notes:$('demNotes').value.trim(),status:'Pendiente',createdAtText:new Date().toLocaleString('es-EC')}};
+ try{localStorage.setItem(pendingPrefix+item.id,JSON.stringify(item))}catch(e){status.textContent='No se pudo crear el respaldo local. No se envió la solicitud; conserva el formulario. '+e.message;return}
+ $('demName').value='';$('demCode').value='';$('demQty').value='1';$('demNotes').value='';pendingMessage('Respaldada en este navegador. Enviando a Firebase…');void send(item);
+});
+U.onAuthStateChanged(auth,()=>{demandGeneration++;initialized=false;lastLoaded=0;demandCursor=null;list=[];render();if($('page-demanda').classList.contains('active'))refresh(true);retryAll()});
+try{pendingMessage()}catch(e){$('demSaveStatus').textContent='El navegador bloquea el respaldo local: '+e.message}
 $('demRefresh').onclick=()=>refresh(true);$('demFilter').oninput=render;$('demStateFilter').onchange=render;
 function rowsExport(){return filtered().map(x=>({'Fecha':x.createdAtText,'Código':x.code||'','Producto':x.product,'Cantidad':x.qty,'Motivo':x.reason,'Colaborador':x.worker||'','Observación':x.notes||'','Estado':x.status}))}
 $('demCopy').onclick=async()=>{const rows=rowsExport(),headers=['Fecha','Código','Producto','Cantidad','Motivo','Colaborador','Observación','Estado'],txt=[headers.join('\t'),...rows.map(r=>headers.map(h=>String(r[h]??'').replace(/[\t\r\n]+/g,' ')).join('\t'))].join('\n');try{await navigator.clipboard.writeText(txt);$('demStatus').textContent=`Copiados ${rows.length} registros para pegar en Excel.`}catch(e){const area=document.createElement('textarea');area.value=txt;document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();$('demStatus').textContent=ok?'Registros copiados.':'El navegador bloqueó el portapapeles; usa la descarga Excel.'}};
@@ -1709,23 +1751,30 @@ $('demandFromSearch').onclick=()=>{const search=$('globalSearch');$('demName').v
 const nav=document.querySelector('.nav button[data-page="demanda"]');nav.addEventListener('click',()=>refresh());
 </script>
 <script type="module">
-import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
-import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-import {getFirestore,collection,query,orderBy,limit,getDocs,doc,updateDoc,deleteDoc} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
-const cfg={apiKey:'AIzaSyBuanC6R8MKiDoGSXkcaSwrN4N8GSyi7qo',authDomain:'inventarios-cb809.firebaseapp.com',projectId:'inventarios-cb809',appId:'1:381711255176:web:66315bf07b5e73d065413d'};
-const app=getApps().find(a=>a.name==='[DEFAULT]')||initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const {auth,db,U,F}=await window.pfFirebaseReady;
+const {onAuthStateChanged}=U;const {collection,query,orderBy,limit,startAfter,getDocsFromServer,doc,updateDoc,deleteDoc}=F;
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let orders=[];let orderListener=null;const states=['nuevo','recibido','confirmado','preparacion','camino','entregado','cancelado'];
+let orders=[];const states=['nuevo','recibido','confirmado','preparacion','camino','entregado','cancelado'];
 function render(){const newCount=orders.filter(x=>x.status==='nuevo').length;const badge=$('pfOrderBadge');badge.textContent=newCount>99?'99+':String(newCount);badge.classList.toggle('active',newCount>0);const filter=$('pfOrderFilter').value;const list=filter==='todos'?orders:orders.filter(x=>x.status===filter);$('pfOrdersList').innerHTML=list.map(o=>`<article class="product" style="cursor:default"><div class="product-top"><div><b>Solicitud ${esc(o.id.slice(0,10).toUpperCase())}</b><p class="footnote">${esc(o.customerName)} · ${esc(o.phone)} · ${esc(o.fulfillment)} · ${esc(o.address)}</p></div><b>$${Number(o.total||0).toFixed(2)}</b></div><div style="margin:9px 0">${(Array.isArray(o.items)?o.items:[]).map(x=>`<div class="footnote">${esc(x.quantity)} × ${esc(x.name)} (${esc(x.code)}) · $${Number(x.unitPrice||0).toFixed(2)}</div>`).join('')}</div>${o.notes?`<p class="footnote">Nota: ${esc(o.notes)}</p>`:''}<div class="toolbar" style="margin-top:10px">${o.status==='nuevo'?`<button class="btn btn-green" data-pf-order-open="${esc(o.id)}">Abrir y marcar recibido</button>`:''}<select data-pf-order-status="${esc(o.id)}">${states.map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${({nuevo:'Nuevo',recibido:'Recibido / abierto',confirmado:'Confirmado',preparacion:'En preparación',camino:'En camino',entregado:'Entregado',cancelado:'Cancelado'})[s]}</option>`).join('')}</select><button class="btn btn-green" data-pf-order-save="${esc(o.id)}">Guardar estado</button><button class="btn btn-danger pf-delete-order" type="button" title="Eliminar pedido" aria-label="Eliminar pedido" data-pf-order-delete="${esc(o.id)}">🗑️</button><a class="btn btn-line" href="https://wa.me/${String(o.phone||'').replace(/\D/g,'').replace(/^0/,'593')}?text=${encodeURIComponent('Hola, te contactamos de PuntoFarma sobre tu solicitud '+o.id.slice(0,10).toUpperCase()+'.')}" target="_blank" rel="noopener noreferrer">WhatsApp</a></div></article>`).join('')||'<div class="empty">No hay solicitudes para este filtro.</div>'}
-async function refresh(){if(!auth.currentUser || auth.currentUser.isAnonymous){orders=[];render();$('pfOrderAuthStatus').textContent='Sin sesión de supervisor. Abre Inventario e inicia sesión en este mismo navegador.';return} $('pfOrdersList').textContent='Cargando solicitudes…';try{const snap=await getDocs(query(collection(db,'catalog_orders'),orderBy('createdAt','desc'),limit(100)));orders=snap.docs.map(d=>({id:d.id,...d.data()}));render();$('pfOrderAuthStatus').textContent='Sesión de Inventario detectada · últimas 100 solicitudes.'}catch(e){orders=[];render();$('pfOrderAuthStatus').textContent='No se pudo autorizar la lectura de pedidos ('+(e.code||'error')+'). Comprueba que la sesión de Inventario sea de supervisor activo.'}}
-$('pfOrderRefresh').onclick=refresh;$('pfOrderFilter').onchange=render;
+let orderCursor=null,orderLoaded=0,orderLoading=null,orderGeneration=0;
+const orderMore=document.createElement('button');orderMore.type='button';orderMore.className='btn btn-line';orderMore.textContent='Cargar 100 anteriores';orderMore.hidden=true;$('pfOrderRefresh').after(orderMore);
+async function refresh(force=false,more=false){
+ if(orderLoading)return orderLoading;if(!force&&!more&&orderLoaded&&Date.now()-orderLoaded<60000){render();return}
+ if(!auth.currentUser){orders=[];render();$('pfOrderAuthStatus').textContent='Sin sesión. Revisa Sesión Firebase.';return}
+ const generation=orderGeneration;
+ orderLoading=(async()=>{orderMore.disabled=true;try{$('pfOrderAuthStatus').textContent='Consultando pedidos…';const constraints=[orderBy('createdAt','desc'),limit(100)];if(more&&orderCursor)constraints.push(startAfter(orderCursor));const snap=await getDocsFromServer(query(collection(db,'catalog_orders'),...constraints));if(generation!==orderGeneration)return;const rows=snap.docs.map(d=>({id:d.id,...d.data()}));orders=more?[...new Map([...orders,...rows].map(x=>[x.id,x])).values()]:rows;orderCursor=snap.docs.at(-1)||null;orderMore.hidden=snap.size<100;orderLoaded=Date.now();render();$('pfOrderAuthStatus').textContent='Consulta actualizada · '+orders.length+' pedidos cargados · usa Actualizar para recibir nuevos pedidos.'}catch(e){if(generation===orderGeneration)$('pfOrderAuthStatus').textContent=window.pfFirebaseError(e)}finally{orderMore.disabled=false}})();try{await orderLoading}finally{orderLoading=null}
+}
+orderMore.onclick=()=>refresh(false,true);
+document.querySelector('.nav button[data-page="pedidos"]')?.addEventListener('click',()=>refresh());
+$('pfOrderBell').title='Pedidos: contador de la última consulta';
+$('pfOrderRefresh').onclick=()=>refresh(true);$('pfOrderFilter').onchange=render;
 $('pfOrderBell').onclick=()=>{document.querySelector('.nav button[data-page="pedidos"]')?.click();$('pfOrderFilter').value='nuevo';render();};
 const themeKey='pf_attention_theme';function setTheme(dark){document.body.classList.toggle('pf-dark',dark);$('pfThemeToggle').textContent=dark?'☀':'☾';$('pfThemeToggle').title=dark?'Modo claro':'Modo oscuro';localStorage.setItem(themeKey,dark?'dark':'light')}
 setTheme(localStorage.getItem(themeKey)==='dark');$('pfThemeToggle').onclick=()=>setTheme(!document.body.classList.contains('pf-dark'));
-$('pfOrdersList').addEventListener('click',async e=>{const btn=e.target.closest('[data-pf-order-delete]');if(!btn)return;const id=btn.dataset.pfOrderDelete;const order=orders.find(x=>x.id===id);if(!order)return;if(!confirm('¿Eliminar definitivamente la solicitud '+id.slice(0,10).toUpperCase()+'? Esta acción no se puede deshacer.'))return;btn.disabled=true;try{await deleteDoc(doc(db,'catalog_orders',id));orders=orders.filter(x=>x.id!==id);render()}catch(err){alert('No se pudo eliminar el pedido. Revisa los permisos de Firebase.');btn.disabled=false}});
-$('pfOrdersList').addEventListener('click',async e=>{const open=e.target.closest('[data-pf-order-open]');if(!open)return;open.disabled=true;try{await updateDoc(doc(db,'catalog_orders',open.dataset.pfOrderOpen),{status:'recibido'});const item=orders.find(x=>x.id===open.dataset.pfOrderOpen);if(item)item.status='recibido';render()}catch(err){alert('No se pudo marcar como recibido. Verifica permisos.');open.disabled=false}});
-$('pfOrdersList').addEventListener('click',async e=>{const btn=e.target.closest('[data-pf-order-save]');if(!btn)return;const id=btn.dataset.pfOrderSave,select=[...document.querySelectorAll('[data-pf-order-status]')].find(x=>x.dataset.pfOrderStatus===id);if(!select||!states.includes(select.value))return;btn.disabled=true;try{await updateDoc(doc(db,'catalog_orders',id),{status:select.value});const o=orders.find(x=>x.id===id);if(o)o.status=select.value;render()}catch(err){alert('No se pudo actualizar el estado. Revisa permisos.')}finally{btn.disabled=false}});
-onAuthStateChanged(auth,u=>{if(u&&!u.isAnonymous)refresh();else{orders=[];render();$('pfOrderAuthStatus').textContent='Abre Inventario e inicia sesión como supervisor en este navegador para consultar pedidos.'}});
+$('pfOrdersList').addEventListener('click',async e=>{if(!navigator.onLine){alert('Sin internet. El cambio del pedido no se ha enviado; vuelve a intentarlo al conectar.');return}const btn=e.target.closest('[data-pf-order-delete]');if(!btn)return;const id=btn.dataset.pfOrderDelete;const order=orders.find(x=>x.id===id);if(!order)return;if(!confirm('¿Eliminar definitivamente la solicitud '+id.slice(0,10).toUpperCase()+'? Esta acción no se puede deshacer.'))return;btn.disabled=true;try{await deleteDoc(doc(db,'catalog_orders',id));orders=orders.filter(x=>x.id!==id);render()}catch(err){alert('No se pudo eliminar: '+window.pfFirebaseError(err));btn.disabled=false}});
+$('pfOrdersList').addEventListener('click',async e=>{if(!navigator.onLine){alert('Sin internet. El cambio del pedido no se ha enviado; vuelve a intentarlo al conectar.');return}const open=e.target.closest('[data-pf-order-open]');if(!open)return;open.disabled=true;try{await updateDoc(doc(db,'catalog_orders',open.dataset.pfOrderOpen),{status:'recibido'});const item=orders.find(x=>x.id===open.dataset.pfOrderOpen);if(item)item.status='recibido';render()}catch(err){alert('No se pudo guardar: '+window.pfFirebaseError(err));open.disabled=false}});
+$('pfOrdersList').addEventListener('click',async e=>{if(!navigator.onLine){alert('Sin internet. El cambio del pedido no se ha enviado; vuelve a intentarlo al conectar.');return}const btn=e.target.closest('[data-pf-order-save]');if(!btn)return;const id=btn.dataset.pfOrderSave,select=[...document.querySelectorAll('[data-pf-order-status]')].find(x=>x.dataset.pfOrderStatus===id);if(!select||!states.includes(select.value))return;btn.disabled=true;try{await updateDoc(doc(db,'catalog_orders',id),{status:select.value});const o=orders.find(x=>x.id===id);if(o)o.status=select.value;render()}catch(err){alert('No se pudo guardar: '+window.pfFirebaseError(err))}finally{btn.disabled=false}});
+onAuthStateChanged(auth,()=>{orderGeneration++;orderLoaded=0;orderCursor=null;orders=[];render();if($('page-pedidos').classList.contains('active'))refresh(true)});
 </script>
 </body>
 </html>
