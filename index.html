@@ -1662,7 +1662,7 @@ window.pfFirebaseReady.catch(e=>{for(const id of ['cloudTopText','demSaveStatus'
    y después recibe sólo los documentos modificados. */
 const {auth,db,U,F}=await window.pfFirebaseReady;
 const {onAuthStateChanged}=U;const {collection,onSnapshot}=F;
-let unsub=null,unsubLocations=null,connected=false,items=new Map(),locations=new Map();
+let unsub=null,unsubLocations=null,connected=false,items=new Map(),locations=new Map(),activeUid=null;
 const stamp=document.createElement('div');stamp.id='pfUnifiedStatus';stamp.style.cssText='padding:10px 14px;margin:10px 0;border:1px solid #cbe4e6;background:#f3fcfc;border-radius:10px;color:#165576;font:600 12px system-ui';stamp.textContent='Catálogo compartido: conectando…';
 (document.querySelector('.content')||document.body).prepend(stamp);
 const safe=t=>String(t??'');
@@ -1682,10 +1682,13 @@ function report(){const bad=Object.values(sync).includes('error'),ok=Object.valu
 window.addEventListener('offline',()=>{sync.products='cache';sync.locations='cache';report()});
 function display(){clearTimeout(debounced);debounced=setTimeout(()=>{const oldSearch=document.getElementById('searchInput')?.value||'';catalog=[...items.entries()].map(([id,p])=>transform(p,id));try{rebuildCatalog();pfRenderPrices?.()}catch(e){console.error('Render unificado',e)}report();},180)}
 function activate(){
+ const uid=auth.currentUser?.uid||null;
+ if(uid===activeUid && (unsub||unsubLocations))return; // evita reinstalar consultas en la misma sesión
+ activeUid=uid;
  unsub?.();unsubLocations?.();unsub=null;unsubLocations=null;items.clear();locations.clear();connected=false;sync.products=sync.locations='loading';delete syncErrors.products;delete syncErrors.locations;display();
  if(!auth.currentUser){sync.products='error';syncErrors.products='No hay sesión de Firebase';report();return}
- unsubLocations=onSnapshot(collection(db,'locations'),{includeMetadataChanges:true},snapshot=>{sync.locations=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.locations;let changed=false;for(const change of snapshot.docChanges()){if(change.type==='removed'){changed=locations.delete(change.doc.id)||changed}else{const next=String(change.doc.data().location||'');if(locations.get(change.doc.id)!==next){locations.set(change.doc.id,next);changed=true}}}if(changed)display();else report()},e=>{sync.locations='error';syncErrors.locations=window.pfFirebaseError(e);report()});
- unsub=onSnapshot(collection(db,'service_products'),{includeMetadataChanges:true},snapshot=>{sync.products=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.products;let changed=false;for(const change of snapshot.docChanges()){if(change.type==='removed'){changed=items.delete(change.doc.id)||changed}else{items.set(change.doc.id,change.doc.data());changed=true}}connected=true;if(changed)display();else report()},e=>{sync.products='error';syncErrors.products=window.pfFirebaseError(e);report()});
+ unsubLocations=onSnapshot(collection(db,'locations'),{includeMetadataChanges:false},snapshot=>{sync.locations=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.locations;let changed=false;for(const change of snapshot.docChanges()){if(change.type==='removed'){changed=locations.delete(change.doc.id)||changed}else{const next=String(change.doc.data().location||'');if(locations.get(change.doc.id)!==next){locations.set(change.doc.id,next);changed=true}}}if(changed)display();else report()},e=>{sync.locations='error';syncErrors.locations=window.pfFirebaseError(e);report()});
+ unsub=onSnapshot(collection(db,'service_products'),{includeMetadataChanges:false},snapshot=>{sync.products=snapshot.metadata.fromCache?'cache':'ok';delete syncErrors.products;let changed=false;for(const change of snapshot.docChanges()){if(change.type==='removed'){changed=items.delete(change.doc.id)||changed}else{items.set(change.doc.id,change.doc.data());changed=true}}connected=true;if(changed)display();else report()},e=>{sync.products='error';syncErrors.products=window.pfFirebaseError(e);report()});
 }
 onAuthStateChanged(auth,activate);
 // Atención al Cliente funciona como consulta del inventario maestro.
